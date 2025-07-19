@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Document</title>
+
+   <style>
+      .my-carousel * {
+         margin: 0;
+         padding: 0;
+         box-sizing: border-box;
+      }
+
+      .my-carousel .main-wrapper {
+         display: flex;
+         align-items: center;
+         justify-content: center;
+      }
+
+      .my-carousel .container {
+         width: 100%;
+         max-width: 70rem;
+         margin: 0 auto;
+         padding: 0px 24px;
+         border-radius: 16px;
+      }
+
+      .my-carousel .carousel-container {
+         position: relative;
+         height: 360px;
+         overflow: hidden;
+         border-radius: 16px;
+      }
+
+      .my-carousel .carousel-track {
+         position: relative;
+         width: 100%;
+         height: 100%;
+      }
+
+      .my-carousel .carousel-slide {
+         position: absolute;
+         top: 0;
+         left: 50%;
+         transform: translateX(-50%) scale(1);
+         transition: all 0.6s ease-in-out;
+         opacity: 0;
+         z-index: 0;
+      }
+
+      .my-carousel .carousel-slide.active {
+         opacity: 1;
+         z-index: 3;
+         transform: translateX(-50%) scale(1.1);
+      }
+
+      .my-carousel .carousel-slide.prev {
+         opacity: 0.6;
+         z-index: 2;
+         transform: translateX(calc(-50% - 280px)) scale(0.8);
+      }
+
+      .my-carousel .carousel-slide.next {
+         opacity: 0.6;
+         z-index: 2;
+         transform: translateX(calc(-50% + 280px)) scale(0.8);
+      }
+
+      .my-carousel .slide-content {
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         min-height: 350px;
+      }
+
+      .my-carousel .slide-inner {
+         text-align: center;
+      }
+
+      .my-carousel .card-image-container {
+         position: relative;
+         width: 270px;
+         height: 270px;
+         background-color: transparent;
+         border-radius: 12px;
+         border: 5px solid #282828;
+         overflow: hidden;
+      }
+
+      .my-carousel .card-image {
+         width: 100%;
+         height: 100%;
+         object-fit: contain;
+         border-radius: 8px;
+      }
+
+      .my-carousel .arrow {
+         position: absolute;
+         top: 50%;
+         transform: translateY(-50%);
+         background-color: rgba(0, 0, 0, 0.5);
+         color: white;
+         border: none;
+         font-size: 2rem;
+         width: 48px;
+         height: 48px;
+         border-radius: 50%;
+         cursor: pointer;
+         z-index: 5;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+      }
+
+      .my-carousel .arrow.left {
+         left: 10px;
+         color: #f7d642;
+      }
+
+      .my-carousel .arrow.right {
+         right: 10px;
+         color: #f7d642;
+      }
+
+      /* .my-carousel .arrow:hover {
+          background-color: rgba(0, 0, 0, 0.7);
+        } */
+
+      @media only screen and (max-width: 450px) {
+         .my-carousel .card-image-container {
+            position: relative;
+            width: 240px;
+            height: 240px;
+         }
+
+         .my-carousel .container {
+            max-width: 90rem;
+            padding: 5px;
+         }
+
+         .my-carousel .arrow.left {
+            left: 5px;
+            color: #f7d642;
+         }
+
+         .my-carousel .arrow.right {
+            right: 5px;
+            color: #f7d642;
+         }
+      }
+   </style>
+
+</head>
+
+<body>
+
+
+   <div class="my-carousel">
+      <div class="main-wrapper">
+         <div class="container">
+            <div class="carousel-container">
+               <div class="carousel-track" id="carouselTrack">
+                  <div class="carousel-slide">
+                     <div class="slide-content">
+                        <div class="slide-inner">
+                           <div class="card-image-container">
+                              <img
+                                 src="https://cdn.shopify.com/s/files/1/0527/4848/4775/files/A86C3824-9AE2-4EC4-AE45-D7D3C6A54C51.png?v=1752897595"
+                                 alt="UCL Cole Palmer" class="card-image" />
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div class="carousel-slide">
+                     <div class="slide-content">
+                        <div class="slide-inner">
+                           <div class="card-image-container">
+                              <img
+                                 src="https://cdn.shopify.com/s/files/1/0527/4848/4775/files/A093B225-DB09-448B-B0E8-6C7C0B1A66D4.png?v=1752897595"
+                                 alt="Charizard Vstar" class="card-image" />
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="carousel-slide">
+                     <div class="slide-content">
+                        <div class="slide-inner">
+                           <div class="card-image-container">
+                              <img
+                                 src="https://cdn.shopify.com/s/files/1/0527/4848/4775/files/B27DC878-1682-4A73-A2AA-B36FA4DEE4DF.png?v=1752897595"
+                                 alt="Mew" class="card-image" />
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div class="carousel-slide">
+                     <div class="slide-content">
+                        <div class="slide-inner">
+                           <div class="card-image-container">
+                              <img
+                                 src="https://cdn.shopify.com/s/files/1/0527/4848/4775/files/imgi_7_product_-_5.png?v=1752136888"
+                                 alt="Monkey D. Luffy SR" class="card-image" />
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div class="carousel-slide">
+                     <div class="slide-content">
+                        <div class="slide-inner">
+                           <div class="card-image-container">
+                              <img
+                                 src="https://cdn.shopify.com/s/files/1/0527/4848/4775/files/imgi_4_product.png?v=1752136889"
+                                 alt="AWAKENING OF THE NEW ERA" class="card-image" />
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               <!-- Arrow Buttons -->
+               <button class="arrow left" id="prevArrow">❮</button>
+               <button class="arrow right" id="nextArrow">❯</button>
+            </div>
+         </div>
+      </div>
+   </div>
+
+   <script>
+      const slides = document.querySelectorAll(".carousel-slide");
+      let current = 0;
+
+      function updateSlides() {
+         slides.forEach((slide, i) => {
+            slide.classList.remove("active", "prev", "next");
+
+            if (i === current) {
+               slide.classList.add("active");
+            } else if (i === (current - 1 + slides.length) % slides.length) {
+               slide.classList.add("prev");
+            } else if (i === (current + 1) % slides.length) {
+               slide.classList.add("next");
+            }
+         });
+      }
+
+      updateSlides();
+
+      // Arrow button functionality
+      document.getElementById("prevArrow").addEventListener("click", () => {
+         current = (current - 1 + slides.length) % slides.length;
+         updateSlides();
+      });
+
+      document.getElementById("nextArrow").addEventListener("click", () => {
+         current = (current + 1) % slides.length;
+         updateSlides();
+      });
+
+      // setInterval(() => {
+      //   current = (current + 1) % slides.length;
+      //   updateSlides();
+      // }, 6000);
+   </script>
+
+</body>
+
+</html>
