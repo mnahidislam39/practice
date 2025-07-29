@@ -1,0 +1,273 @@
+<!-- Swiper -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+
+<style>
+.video-carousel-section {
+  width: 100%;
+}
+.swiper {
+  width: 100%;
+  padding-bottom: 40px;
+}
+.swiper-slide {
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+.video-wrapper iframe,
+.video-wrapper video,
+.video-wrapper img {
+  width: 100%;
+  height: 315px;
+  display: block;
+  object-fit: cover;
+}
+.video-info {
+  padding: 15px;
+}
+.video-info h2 {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+.video-info p {
+  font-size: 14px;
+  color: #555;
+}
+.swiper-button-prev,
+.swiper-button-next {
+  color: #333;
+}
+</style>
+
+<div class="video-carousel-section"
+     style="
+       padding-top: {{ section.settings.padding_top }}px;
+       padding-bottom: {{ section.settings.padding_bottom }}px;
+       background-color: {{ section.settings.bg_color }};
+     ">
+  <div class="swiper video-swiper"
+       data-slides="{{ section.settings.slides_per_row }}"
+       data-show-arrows="{{ section.settings.show_arrows }}"
+       data-show-pagination="{{ section.settings.show_pagination }}">
+    <div class="swiper-wrapper">
+      {% for block in section.blocks %}
+        <div class="swiper-slide">
+          <div class="video-wrapper">
+            {% if block.settings.override_image %}
+              <img src="{{ block.settings.override_image | image_url: width: 1200 }}" alt="{{ block.settings.title | escape }}">
+            {% else %}
+              {% case block.settings.video_source %}
+                {% when "youtube" %}
+                  <iframe 
+                    src="https://www.youtube.com/embed/{{ block.settings.video_link | split: 'v=' | last }}" 
+                    title="{{ block.settings.title | escape }}" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen></iframe>
+
+                {% when "vimeo" %}
+                  <iframe 
+                    src="https://player.vimeo.com/video/{{ block.settings.video_link | split: '/' | last }}" 
+                    title="{{ block.settings.title | escape }}" 
+                    allow="autoplay; fullscreen; picture-in-picture" 
+                    allowfullscreen></iframe>
+
+                {% when "mp4" %}
+                  {% if block.settings.uploaded_video %}
+                    <video controls>
+                      <source src="{{ block.settings.uploaded_video }}" type="video/mp4">
+                      Your browser does not support the video tag.
+                    </video>
+                  {% else %}
+                    <p>No MP4 video provided</p>
+                  {% endif %}
+              {% endcase %}
+            {% endif %}
+          </div>
+          <div class="video-info">
+          <div>
+            <h2>{{ block.settings.title }}</h2>
+            <p>{{ block.settings.description }}</p>            
+          </div>
+            <a href="{{ block.settings.btnUrl }}" class="m-button m-button--primary "> {{ block.settings.btnText }} </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if section.settings.show_arrows %}
+      <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div>
+    {% endif %}
+    
+    {% if section.settings.show_pagination %}
+      <div class="swiper-pagination"></div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const swiperEl = document.querySelector('.video-swiper');
+  const slidesPerView = parseInt(swiperEl.dataset.slides) || 3;
+  const showArrows = swiperEl.dataset.showArrows === 'true';
+  const showPagination = swiperEl.dataset.showPagination === 'true';
+
+  new Swiper('.video-swiper', {
+    slidesPerView: 1,
+    spaceBetween: 20,
+    loop: true,
+    navigation: showArrows ? {
+      nextEl: '.swiper-button-next',
+      prevEl: '.swiper-button-prev'
+    } : false,
+    pagination: showPagination ? {
+      el: '.swiper-pagination',
+      clickable: true
+    } : false,
+    breakpoints: {
+      768: {
+        slidesPerView: Math.min(slidesPerView, 2)
+      },
+      1024: {
+        slidesPerView: slidesPerView
+      }
+    }
+  });
+});
+</script>
+
+{% schema %}
+{
+  "name": "Video/Image Carousel",
+  "tag": "section",
+  "class": "section-video-carousel",
+  "settings": [
+    {
+      "type": "range",
+      "id": "slides_per_row",
+      "label": "Slides per row (desktop)",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows",
+      "label": "Show navigation arrows",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_pagination",
+      "label": "Show pagination dots",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top (px)",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom (px)",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "default": 40
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#f9f9f9"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "video_slide",
+      "name": "Video or Image Slide",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "override_image",
+          "label": "Override image (optional)",
+          "info": "If set, this image will replace the video."
+        },
+        {
+          "type": "select",
+          "id": "video_source",
+          "label": "Video Source",
+          "options": [
+            { "value": "youtube", "label": "YouTube" },
+            { "value": "vimeo", "label": "Vimeo" },
+            { "value": "mp4", "label": "MP4 Upload" }
+          ],
+          "default": "youtube"
+        },
+        {
+          "type": "text",
+          "id": "video_link",
+          "label": "YouTube or Vimeo Link",
+          "default": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          "info": "Paste a full YouTube or Vimeo URL. Ignored for MP4 uploads."
+        },
+        {
+          "type": "url",
+          "id": "uploaded_video",
+          "label": "MP4 Video File",       
+          "info": "Upload an MP4 file from Shopify files. Only used if 'MP4 Upload' is selected."
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Slide Title",
+          "default": "Sample Title"
+        },
+        {
+          "type": "textarea",
+          "id": "description",
+          "label": "Slide Description",
+          "default": "This is a sample description for the carousel item."
+        },
+                {
+       "type": "textarea",
+          "id": "btnText",
+          "label": "Button Text",
+          "default": "View More"
+        },
+                {
+          "type": "url",
+          "id": "btnUrl",
+          "label": "Button Link",
+
+        }        
+      ]
+    }
+  ],
+  "max_blocks": 10,
+  "presets": [
+    {
+      "name": "Video/Image Carousel",
+      "category": "Media",
+      "settings": {
+        "slides_per_row": 3,
+        "show_arrows": true,
+        "show_pagination": true
+      },
+      "blocks": [
+        {
+          "type": "video_slide"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
