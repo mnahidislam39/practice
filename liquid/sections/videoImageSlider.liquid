@@ -85,7 +85,7 @@
   }
 </style>
 
-<div class="video-carousel-section"
+<div id="section-{{ section.id }}" class="video-carousel-section"
      style="
        padding-top: {{ section.settings.padding_top }}px;
        padding-bottom: {{ section.settings.padding_bottom }}px;
@@ -96,7 +96,8 @@
          data-slides="{{ section.settings.slides_per_row }}"
          data-show-arrows="{{ section.settings.show_arrows }}"
          data-show-pagination="{{ section.settings.show_pagination }}"
-         data-slide-gap="{{ section.settings.slide_gap }}">
+         data-slide-gap="{{ section.settings.slide_gap }}"
+         >
       <div class="swiper-wrapper">
         {% for block in section.blocks %}
           <div class="swiper-slide">
@@ -152,8 +153,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  function initVanillaSwiper() {
-    const swiperEl = document.querySelector('.video-swiper');
+  function initVanillaSwiper(swiperEl) {
     if (!swiperEl) return;
 
     const slidesPerViewDefault = parseInt(swiperEl.dataset.slides) || 3;
@@ -187,10 +187,6 @@ document.addEventListener("DOMContentLoaded", function () {
         slide.style.flexBasis = slideWidthPercent + '%';
         slide.style.marginRight = slideGap + 'px';
       });
-      // Remove margin-right on last visible slides to avoid extra gap
-      for (let i = totalSlides - slidesPerView; i < totalSlides; i++) {
-        if (slides[i]) slides[i].style.marginRight = '0px';
-      }
     }
 
     setSlideWidthsAndGap();
@@ -266,7 +262,10 @@ document.addEventListener("DOMContentLoaded", function () {
     updateSliderPosition();
   }
 
-  initVanillaSwiper();
+  // Initialize all video-swipers on the page independently
+  document.querySelectorAll('.video-swiper').forEach(swiperEl => {
+    initVanillaSwiper(swiperEl);
+  });
 });
 </script>
 
