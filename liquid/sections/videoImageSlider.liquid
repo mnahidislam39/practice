@@ -1,44 +1,88 @@
-<!-- Swiper -->
-<script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
-
 <style>
-.video-carousel-section {
-  width: 100%;
-}
-.swiper {
-  width: 100%;
-  padding-bottom: 40px;
-}
-.swiper-slide {
-  background: #fff;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-.video-wrapper iframe,
-.video-wrapper video,
-.video-wrapper img {
-  width: 100%;
-  height: 315px;
-  display: block;
-  object-fit: cover;
-}
-.video-info {
-  padding: 15px;
-}
-.video-info h2 {
-  font-size: 20px;
-  margin-bottom: 10px;
-}
-.video-info p {
-  font-size: 14px;
-  color: #555;
-}
-.swiper-button-prev,
-.swiper-button-next {
-  color: #333;
-}
+  .video-carousel-section {
+    width: 100%;
+  }
+  .swiper {
+    width: 100%;
+    overflow: hidden;
+    padding-bottom: 40px;
+    position: relative;
+  }
+  .swiper-wrapper {
+    display: flex;
+    transition: transform 0.4s ease;
+    will-change: transform;
+  }
+  .swiper-slide {
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+    /* margin-right set dynamically via JS */
+  }
+  .video-wrapper iframe,
+  .video-wrapper video,
+  .video-wrapper img {
+    width: 100%;
+    height: 315px;
+    display: block;
+    object-fit: cover;
+  }
+  .video-info {
+    padding: 15px;
+  }
+  .video-info h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  .video-info p {
+    font-size: 14px;
+    color: #555;
+  }
+  .swiper-button-prev, .swiper-button-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #333;
+    background: #fff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 10;
+  }
+  .swiper-button-prev {
+    left: 10px;
+  }
+  .swiper-button-next {
+    right: 10px;
+  }
+  .swiper-pagination {
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+    user-select: none;
+  }
+  .swiper-pagination .dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin: 0 5px;
+    background: #ccc;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .swiper-pagination .dot.active {
+    background: #333;
+  }
 </style>
 
 <div class="video-carousel-section"
@@ -47,94 +91,182 @@
        padding-bottom: {{ section.settings.padding_bottom }}px;
        background-color: {{ section.settings.bg_color }};
      ">
-  <div class="swiper video-swiper"
-       data-slides="{{ section.settings.slides_per_row }}"
-       data-show-arrows="{{ section.settings.show_arrows }}"
-       data-show-pagination="{{ section.settings.show_pagination }}">
-    <div class="swiper-wrapper">
-      {% for block in section.blocks %}
-        <div class="swiper-slide">
-          <div class="video-wrapper">
-            {% if block.settings.override_image %}
-              <img src="{{ block.settings.override_image | image_url: width: 1200 }}" alt="{{ block.settings.title | escape }}">
-            {% else %}
-              {% case block.settings.video_source %}
-                {% when "youtube" %}
-                  <iframe 
-                    src="https://www.youtube.com/embed/{{ block.settings.video_link | split: 'v=' | last }}" 
-                    title="{{ block.settings.title | escape }}" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen></iframe>
+  <div class="container-fluid">
+    <div class="swiper video-swiper"
+         data-slides="{{ section.settings.slides_per_row }}"
+         data-show-arrows="{{ section.settings.show_arrows }}"
+         data-show-pagination="{{ section.settings.show_pagination }}"
+         data-slide-gap="{{ section.settings.slide_gap }}">
+      <div class="swiper-wrapper">
+        {% for block in section.blocks %}
+          <div class="swiper-slide">
+            <div class="video-wrapper">
+              {% if block.settings.override_image %}
+                <img src="{{ block.settings.override_image | image_url: width: 1200 }}" alt="{{ block.settings.title | escape }}">
+              {% else %}
+                {% case block.settings.video_source %}
+                  {% when "youtube" %}
+                    <iframe 
+                      src="https://www.youtube.com/embed/{{ block.settings.video_link | split: 'v=' | last }}" 
+                      title="{{ block.settings.title | escape }}" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowfullscreen></iframe>
+                  {% when "vimeo" %}
+                    <iframe 
+                      src="https://player.vimeo.com/video/{{ block.settings.video_link | split: '/' | last }}" 
+                      title="{{ block.settings.title | escape }}" 
+                      allow="autoplay; fullscreen; picture-in-picture" 
+                      allowfullscreen></iframe>
+                  {% when "mp4" %}
+                    {% if block.settings.uploaded_video %}
+                      <video controls>
+                        <source src="{{ block.settings.uploaded_video }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                      </video>
+                    {% else %}
+                      <p>No MP4 video provided</p>
+                    {% endif %}
+                {% endcase %}
+              {% endif %}
+            </div>
+            <div class="video-info">
+              <h2>{{ block.settings.title }}</h2>
+              <p>{{ block.settings.description }}</p>
+              <a href="{{ block.settings.btnUrl }}" class="m-button m-button--primary"> {{ block.settings.btnText }} </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
 
-                {% when "vimeo" %}
-                  <iframe 
-                    src="https://player.vimeo.com/video/{{ block.settings.video_link | split: '/' | last }}" 
-                    title="{{ block.settings.title | escape }}" 
-                    allow="autoplay; fullscreen; picture-in-picture" 
-                    allowfullscreen></iframe>
-
-                {% when "mp4" %}
-                  {% if block.settings.uploaded_video %}
-                    <video controls>
-                      <source src="{{ block.settings.uploaded_video }}" type="video/mp4">
-                      Your browser does not support the video tag.
-                    </video>
-                  {% else %}
-                    <p>No MP4 video provided</p>
-                  {% endif %}
-              {% endcase %}
-            {% endif %}
-          </div>
-          <div class="video-info">
-          <div>
-            <h2>{{ block.settings.title }}</h2>
-            <p>{{ block.settings.description }}</p>            
-          </div>
-            <a href="{{ block.settings.btnUrl }}" class="m-button m-button--primary "> {{ block.settings.btnText }} </a>
-          </div>
-        </div>
-      {% endfor %}
+      {% if section.settings.show_arrows %}
+        <div class="swiper-button-prev">&#10094;</div>
+        <div class="swiper-button-next">&#10095;</div>
+      {% endif %}
+      
+      {% if section.settings.show_pagination %}
+        <div class="swiper-pagination"></div>
+      {% endif %}
     </div>
-
-    {% if section.settings.show_arrows %}
-      <div class="swiper-button-next"></div>
-      <div class="swiper-button-prev"></div>
-    {% endif %}
-    
-    {% if section.settings.show_pagination %}
-      <div class="swiper-pagination"></div>
-    {% endif %}
   </div>
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const swiperEl = document.querySelector('.video-swiper');
-  const slidesPerView = parseInt(swiperEl.dataset.slides) || 3;
-  const showArrows = swiperEl.dataset.showArrows === 'true';
-  const showPagination = swiperEl.dataset.showPagination === 'true';
+  function initVanillaSwiper() {
+    const swiperEl = document.querySelector('.video-swiper');
+    if (!swiperEl) return;
 
-  new Swiper('.video-swiper', {
-    slidesPerView: 1,
-    spaceBetween: 20,
-    loop: true,
-    navigation: showArrows ? {
-      nextEl: '.swiper-button-next',
-      prevEl: '.swiper-button-prev'
-    } : false,
-    pagination: showPagination ? {
-      el: '.swiper-pagination',
-      clickable: true
-    } : false,
-    breakpoints: {
-      768: {
-        slidesPerView: Math.min(slidesPerView, 2)
-      },
-      1024: {
-        slidesPerView: slidesPerView
+    const slidesPerViewDefault = parseInt(swiperEl.dataset.slides) || 3;
+    const showArrows = swiperEl.dataset.showArrows === 'true';
+    const showPagination = swiperEl.dataset.showPagination === 'true';
+    const slideGap = parseInt(swiperEl.dataset.slideGap) || 20;
+
+    const wrapper = swiperEl.querySelector('.swiper-wrapper');
+    const slides = swiperEl.querySelectorAll('.swiper-slide');
+    const totalSlides = slides.length;
+
+    let slidesPerView = 1;
+    let currentIndex = 0;
+
+    function updateSlidesPerView() {
+      const width = window.innerWidth;
+      if (width >= 1024) {
+        slidesPerView = slidesPerViewDefault;
+      } else if (width >= 768) {
+        slidesPerView = Math.min(slidesPerViewDefault, 2);
+      } else {
+        slidesPerView = 1;
       }
     }
-  });
+
+    updateSlidesPerView();
+
+    function setSlideWidthsAndGap() {
+      const slideWidthPercent = (100 / slidesPerView);
+      slides.forEach((slide, index) => {
+        slide.style.flexBasis = slideWidthPercent + '%';
+        slide.style.marginRight = slideGap + 'px';
+      });
+      // Remove margin-right on last visible slides to avoid extra gap
+      for (let i = totalSlides - slidesPerView; i < totalSlides; i++) {
+        if (slides[i]) slides[i].style.marginRight = '0px';
+      }
+    }
+
+    setSlideWidthsAndGap();
+
+    function updateSliderPosition() {
+      if (currentIndex < 0) currentIndex = 0;
+      if (currentIndex > totalSlides - slidesPerView) currentIndex = totalSlides - slidesPerView;
+      if (currentIndex < 0) currentIndex = 0;
+
+      const translateX = -(currentIndex * (100 / slidesPerView) + currentIndex * (slideGap / swiperEl.clientWidth) * 100);
+      wrapper.style.transform = `translateX(${translateX}%)`;
+
+      updatePagination();
+      updateButtons();
+    }
+
+    const prevBtn = swiperEl.querySelector('.swiper-button-prev');
+    const nextBtn = swiperEl.querySelector('.swiper-button-next');
+
+    function updateButtons() {
+      if (!showArrows) return;
+      if (currentIndex <= 0) {
+        prevBtn.style.visibility = 'hidden';
+      } else {
+        prevBtn.style.visibility = 'visible';
+      }
+      if (currentIndex >= totalSlides - slidesPerView) {
+        nextBtn.style.visibility = 'hidden';
+      } else {
+        nextBtn.style.visibility = 'visible';
+      }
+    }
+
+    if (showArrows) {
+      prevBtn.addEventListener('click', () => {
+        currentIndex--;
+        updateSliderPosition();
+      });
+
+      nextBtn.addEventListener('click', () => {
+        currentIndex++;
+        updateSliderPosition();
+      });
+    }
+
+    const paginationEl = swiperEl.querySelector('.swiper-pagination');
+
+    function updatePagination() {
+      if (!showPagination || !paginationEl) return;
+      paginationEl.innerHTML = '';
+
+      const pageCount = totalSlides - slidesPerView + 1;
+      for (let i = 0; i < pageCount; i++) {
+        const dot = document.createElement('span');
+        dot.classList.add('dot');
+        if (i === currentIndex) dot.classList.add('active');
+        dot.addEventListener('click', () => {
+          currentIndex = i;
+          updateSliderPosition();
+        });
+        paginationEl.appendChild(dot);
+      }
+    }
+
+    if (showPagination) updatePagination();
+
+    window.addEventListener('resize', () => {
+      updateSlidesPerView();
+      setSlideWidthsAndGap();
+      updateSliderPosition();
+    });
+
+    updateSliderPosition();
+  }
+
+  initVanillaSwiper();
 });
 </script>
 
@@ -152,6 +284,15 @@ document.addEventListener("DOMContentLoaded", function () {
       "max": 6,
       "step": 1,
       "default": 3
+    },
+    {
+      "type": "range",
+      "id": "slide_gap",
+      "label": "Gap between slides (px)",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "default": 20
     },
     {
       "type": "checkbox",
@@ -222,7 +363,7 @@ document.addEventListener("DOMContentLoaded", function () {
         {
           "type": "url",
           "id": "uploaded_video",
-          "label": "MP4 Video File",       
+          "label": "MP4 Video File",
           "info": "Upload an MP4 file from Shopify files. Only used if 'MP4 Upload' is selected."
         },
         {
@@ -237,18 +378,17 @@ document.addEventListener("DOMContentLoaded", function () {
           "label": "Slide Description",
           "default": "This is a sample description for the carousel item."
         },
-                {
-       "type": "textarea",
+        {
+          "type": "textarea",
           "id": "btnText",
           "label": "Button Text",
           "default": "View More"
         },
-                {
+        {
           "type": "url",
           "id": "btnUrl",
-          "label": "Button Link",
-
-        }        
+          "label": "Button Link"
+        }
       ]
     }
   ],
@@ -259,6 +399,7 @@ document.addEventListener("DOMContentLoaded", function () {
       "category": "Media",
       "settings": {
         "slides_per_row": 3,
+        "slide_gap": 20,
         "show_arrows": true,
         "show_pagination": true
       },
