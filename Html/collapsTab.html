@@ -1,0 +1,119 @@
+<style>
+  .sd img {
+    width: 30px;
+}
+.sd {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+}
+  .dropdown-toggle {
+    cursor: pointer;
+    padding: 10px;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .dropdown-toggle:hover {
+    background-color: #f0f0f0;
+  }
+
+  .product-sell-content {
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+  }
+
+  .product-sell-box {
+    margin-bottom: 5px;
+  }
+
+  .arrow {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+  }
+
+  .product-sell-icon svg {
+    margin-right: 10px;
+  }
+
+  .product-sell-text {
+    flex-grow: 1;
+  }
+</style>
+
+<div class="product-sell-info shopline-element-sell-info overThree product-sell-info-vertical" id="product-sell-info_productDetail">
+  <!-- Free Shipping Section -->
+  <div class="product-sell-box dropdown-toggle" onclick="toggleDropdown('box1', this)">
+    <div class="product-sell-text body3">
+       <div class="sd"><img src="https://cdn.shopify.com/s/files/1/0707/8412/3017/files/payment-protection_c20e8712-27fd-42b2-8b24-f6bf7bdcd4a2.png?v=1751512823" alt=" " class="im"> <p>100% guarantee</p></div>
+    </div>
+    <div class="arrow">+</div> <!-- Plus Icon -->
+  </div>
+
+  <div id="box1" class="product-sell-content" style="display: none;">
+    <p>If for any reason you are not happy with the results, we will give a full-refund, no questions asked.
+
+Withing 30-days of receiving your product. Simply use our contact form and send an email and we'll get it resolved for you.</p>
+  </div>
+
+  <!-- Return and Refund Policy Section -->
+  <div class="product-sell-box dropdown-toggle" onclick="toggleDropdown('box2', this)">
+    <div class="product-sell-text body3">
+  <div class="sd"><img src="https://cdn.shopify.com/s/files/1/0707/8412/3017/files/WEBSITE_ICON-07.png?v=1751512991" alt=" " class="im"> <p>Return and Refund policy</p></div>
+    </div>
+    <div class="arrow">+</div> <!-- Plus Icon -->
+  </div>
+
+  <div id="box2" class="product-sell-content" style="display: none;">
+    <p>• Full refund, no questions asked, if requested within 30 days of receiving the product <br>
+• To initiate a return or refund, simply contact the company through their contact form or email.  <br>
+We are a third-party vendor, not Xiaomi’s official store. Our official return and exchange windows typically range from 7 to 15 calendar days, depending on region and defect status. These policies may include conditions like proof of purchase, product condition, and packaging</p>
+  </div>
+
+  <!-- Shipping & Delivery Section -->
+  <div class="product-sell-box dropdown-toggle" onclick="toggleDropdown('box3', this)">
+    <div class="product-sell-text body3">
+  <div class="sd"><img src="https://cdn.shopify.com/s/files/1/0707/8412/3017/files/download.png?v=1751512823" alt=" " class="im"> <p>Shipping & Delivery</p></div>
+    </div>
+    <div class="arrow">+</div> <!-- Plus Icon -->
+  </div>
+
+  <div id="box3" class="product-sell-content" style="display: none;">
+    <p>📦 Shipping Information – USA Only
+We currently ship exclusively within the United States.
+✅ Processing Time: 1–2 business days
+🚚 Standard Shipping: 4–7 business days
+💖 Free Insured Shipping on all orders over $50</p>
+  </div>
+</div>
+
+<script>
+  function toggleDropdown(boxId, element) {
+    var content = document.getElementById(boxId);
+    var arrow = element.querySelector('.arrow');
+    
+    // Hide all content boxes
+    var allContents = document.querySelectorAll('.product-sell-content');
+    allContents.forEach(function(contentElement) {
+      if (contentElement !== content) {
+        contentElement.style.display = 'none'; // Close other sections
+        // Reset the other arrows to "+"
+        var otherArrow = contentElement.previousElementSibling.querySelector('.arrow');
+        otherArrow.textContent = "+";
+      }
+    });
+
+    // Toggle content visibility for the selected one
+    if (content.style.display === "none" || content.style.display === "") {
+      content.style.display = "block";
+      arrow.textContent = "-"; // Change icon to minus when expanded
+    } else {
+      content.style.display = "none";
+      arrow.textContent = "+"; // Change icon to plus when collapsed
+    }
+  }
+</script>
