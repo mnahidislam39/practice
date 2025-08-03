@@ -1,0 +1,50 @@
+<!-- visitor count  -->
+<div style="color: #e02020;" class="_visitorsBox_1tba8_1 j-shopline-Visitors" data-back-color="rgb(224, 32, 32)"
+   data-back-background="rgb(255, 255, 255)">
+   <svg width="1.15em" height="1.15em" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+         d="M7.99995 5.4001C6.56401 5.4001 5.39995 6.56416 5.39995 8.0001C5.39995 9.43604 6.56401 10.6001 7.99995 10.6001C9.43589 10.6001 10.6 9.43604 10.6 8.0001C10.6 6.56416 9.43589 5.4001 7.99995 5.4001ZM6.59995 8.0001C6.59995 7.2269 7.22675 6.6001 7.99995 6.6001C8.77315 6.6001 9.39995 7.2269 9.39995 8.0001C9.39995 8.7733 8.77315 9.4001 7.99995 9.4001C7.22675 9.4001 6.59995 8.7733 6.59995 8.0001Z"
+         fill="currentColor"></path>
+      <path
+         d="M7.99995 2.6001C4.49258 2.6001 1.48673 4.73774 0.244652 7.77285C0.185051 7.91849 0.185051 8.08171 0.244652 8.22735C1.48673 11.2625 4.49259 13.4001 7.99996 13.4001C11.5073 13.4001 14.5132 11.2625 15.7553 8.22735C15.8149 8.08171 15.8149 7.91849 15.7553 7.77285C14.5132 4.73774 11.5073 2.6001 7.99995 2.6001ZM7.99996 12.2001C5.07899 12.2001 2.56883 10.4733 1.45298 8.0001C2.56883 5.52691 5.07899 3.8001 7.99995 3.8001C10.9209 3.8001 13.4311 5.52691 14.5469 8.0001C13.4311 10.4733 10.9209 12.2001 7.99996 12.2001Z"
+         fill="currentColor"></path>
+   </svg> &nbsp;&nbsp;
+   <span id="visitorCount" class="_text_1tba8_33 number notranslate"> 480 </span>
+   <span class="_text_1tba8_33">&nbsp;&nbsp; Visitors are browsing our store.</span>
+
+   <div style="background-color: rgb(255,255,255);color: #e02020;"
+      class="_productVirtualSale_1b39j_1 j-shopline-ProductVirtualSale _appendContent_1b39j_33">
+      <span style="color: #e02020;" class="_lineColor_1b39j_14">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+      <svg width="1.15em" height="1.15em" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+         <path
+            d="M8.00004 1C6.34319 1 5.00004 2.34315 5.00004 4L2.88071 4C2.67337 4 2.5004 4.15843 2.48224 4.36497L1.63829 13.965C1.61773 14.1988 1.80201 14.4 2.03675 14.4H13.9633C14.1981 14.4 14.3824 14.1988 14.3618 13.965L13.5178 4.36497C13.4997 4.15843 13.3267 4 13.1194 4L11 4C11 2.34315 9.6569 1 8.00004 1ZM9.80004 5.2V7.2H11V5.2H12.3866L13.0899 13.2H2.91016L3.61346 5.2H5.00004V7.2H6.20004V5.2H9.80004ZM9.80004 4L6.20004 4C6.20004 3.00589 7.00593 2.2 8.00004 2.2C8.99415 2.2 9.80004 3.00589 9.80004 4Z"
+            fill="currentColor"></path>
+      </svg>&nbsp;&nbsp;
+      <span class="_text_1b39j_41">Sold this month <span class="_text_1b39j_41 number">6277</span></span>
+   </div>
+</div>
+
+<script>
+   let visitorCount = 480;
+   const visitorSpan = document.getElementById('visitorCount');
+
+   // Function to simulate random fluctuations
+   function randomFluctuation() {
+      const fluctuation = Math.floor(Math.random() * 5) - 2; // Generates a random value between -2 and 2
+      visitorCount += fluctuation; // Update the visitor count with the fluctuation
+      visitorSpan.textContent = visitorCount;
+   }
+
+   setInterval(randomFluctuation, 1000);  // Update every second (1000 milliseconds)
+</script>
+
+<style>
+   ._visitorsBox_1tba8_1.j-shopline-Visitors {
+      display: flex;
+      font-size: 15px;
+   }
+
+   ._productVirtualSale_1b39j_1.j-shopline-ProductVirtualSale._appendContent_1b39j_33 {
+      display: flex;
+   }
+</style>
