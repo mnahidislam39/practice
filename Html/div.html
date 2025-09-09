@@ -156,3 +156,238 @@
    // Call the function when the page loads
    setActiveMenuItem();
 </script>
+
+
+<div class="icos"><a href="https://www.facebook.com/share/16VQ2rtMGq/"><img
+         src="https://cdn.shopify.com/s/files/1/0929/7212/2486/files/facebook.png?v=1754559687" alt=""></a></div>
+<div class="icos"><a href="#"><img
+         src="https://cdn.shopify.com/s/files/1/0929/7212/2486/files/instagram.png?v=1754559686" alt=""></a></div>
+<div class="icos"><a href="https://www.tiktok.com/@bathroomfocalpoint?_t=ZN-8zO94yNGk5u&_r=1"><img
+         src="https://cdn.shopify.com/s/files/1/0929/7212/2486/files/social-media.png?v=1754559687" alt=""></a></div>
+
+<style>
+   /* Container for the icons */
+   .icos {
+      display: inline-flex;
+      /* Use inline-flex to arrange icons in a row */
+      justify-content: center;
+      /* Center align the icons */
+      align-items: center;
+      /* Vertically align the icons */
+      width: auto;
+      /* Set the width of each icon to 50px */
+      height: auto;
+      /* Set the height of each icon to 50px */
+      margin: 0;
+      /* Add margin between icons */
+   }
+
+   .icos img {
+      width: 30px;
+      /* Set the image width to 50px */
+      height: auto;
+      /* Set the image height to 50px */
+      object-fit: contain;
+      /* Ensure the images scale proportionally without distorting */
+   }
+
+   a {
+      transition: 0.3s ease-in-out;
+   }
+
+   a:hover {
+      transform: scale(1.1);
+   }
+
+   .block-text {
+      display: flex;
+      gap: 10px;
+   }
+</style>
+
+
+<!-- Product Benefits with Icons and Scrollable Feature -->
+<style>
+   body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f4;
+   }
+
+   .product-benefits {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-height: 300px;
+      /* Adjust as needed */
+      overflow-y: auto;
+      /* Enable scrolling */
+      padding-right: 10px;
+      /* Optional, for scroll space */
+      scroll-behavior: smooth;
+      /* Smooth scrolling */
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      width: 350px;
+   }
+
+   .benefit-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 10px 0;
+      border-bottom: 1px solid #ddd;
+      /* Optional: Add a separator between items */
+   }
+
+   .icon {
+      width: 24px;
+      /* Adjust size as needed */
+      height: 24px;
+      /* Adjust size as needed */
+   }
+
+   h4 {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0;
+   }
+
+   /* Optional: Add a scroll bar style */
+   .product-benefits::-webkit-scrollbar {
+      width: 8px;
+   }
+
+   .product-benefits::-webkit-scrollbar-thumb {
+      background-color: #888;
+      border-radius: 10px;
+   }
+
+   .product-benefits::-webkit-scrollbar-thumb:hover {
+      background-color: #555;
+   }
+</style>
+
+
+<div class="product-benefits">
+   <!-- Benefit 1 -->
+   <div class="benefit-item">
+      <img class="icon" src="path_to_your_flower_icon.png" alt="Flower Icon">
+      <h4>Supports Balanced Vaginal Flora</h4>
+   </div>
+
+   <!-- Benefit 2 -->
+   <div class="benefit-item">
+      <img class="icon" src="path_to_your_shield_icon.png" alt="Shield Icon">
+      <h4>Strengthens Natural Defenses</h4>
+   </div>
+
+   <!-- Benefit 3 -->
+   <div class="benefit-item">
+      <img class="icon" src="path_to_your_balance_icon.png" alt="Balance Icon">
+      <h4>Helps Maintain pH Balance</h4>
+   </div>
+
+   <!-- Benefit 4 -->
+   <div class="benefit-item">
+      <img class="icon" src="path_to_your_leaf_icon.png" alt="Leaf Icon">
+      <h4>Gentle & Safe for Daily Use</h4>
+   </div>
+
+   <!-- Benefit 5 -->
+   <div class="benefit-item">
+      <img class="icon" src="path_to_your_test_tube_icon.png" alt="Test Tube Icon">
+      <h4>Clinically Backed Ingredients</h4>
+   </div>
+
+   <!-- Benefit 6 -->
+   <div class="benefit-item">
+      <img class="icon" src="path_to_your_confidence_icon.png" alt="Confidence Icon">
+      <h4>Feel Fresh & Confident</h4>
+   </div>
+</div>
+
+<!-- change image in mobile device -->
+<script>
+   if (window.innerWidth <= 768) {
+      document.addEventListener("DOMContentLoaded", function () {
+         var imageElement = document.querySelector("#Hero-template--25202184388926__hero_8aPqNp .hero__media-wrapper img.hero__image");
+         if (imageElement) {
+            // Check if the device width is less than or equal to 768px (mobile device)
+            if (window.innerWidth <= 768) {
+               // Set the image source for mobile devices
+               imageElement.src = "https://cdn.shopify.com/s/files/1/0941/6903/9166/files/download_37.png?v=1756966156";
+               imageElement.srcset = "https://cdn.shopify.com/s/files/1/0941/6903/9166/files/download_37.png?v=1756966156&width=300 300w, https://cdn.shopify.com/s/files/1/0941/6903/9166/files/download_37.png?v=1756966156&width=450 450w, https://cdn.shopify.com/s/files/1/0941/6903/9166/files/download_37.png?v=1756966156&width=600 600w, https://cdn.shopify.com/s/files/1/0941/6903/9166/files/download_37.png?v=1756966156&width=750 750w, https://cdn.shopify.com/s/files/1/0941/6903/9166/files/download_37.png?v=1756966156&width=900 900w, https://cdn.shopify.com/s/files/1/0941/6903/9166/files/download_37.png?v=1756966156&width=1050 1050w";
+               imageElement.style.display = 'block'; // Show the image on mobile devices
+            } else {
+               // Hide the image if the screen width is greater than 768px
+               imageElement.style.display = 'none'; // Hide the image for larger screens
+            }
+         }
+      });
+   }
+</script>
+
+
+
+<div class="cntr">
+   <h4>How does it work?</h4>
+   <div class="sngl">
+      <div class="snle">
+         <p>Supplies targeted probiotic strains (like Lactobacillus) to restore vaginal flora.</p>
+      </div>
+      <div class="snle">
+         <p>Helps maintain a healthy, slightly acidic vaginal pH to prevent overgrowth of harmful microbes.</p>
+      </div>
+      <div class="snle">
+         <p>Boosts the body's ability to fight off infections like BV and yeast.</p>
+      </div>
+      <div class="snle">
+         <p>Encourages natural hydration and reduces dryness or irritation.</p>
+      </div>
+      <div class="snle">
+         <p>Works from within to support urinary and vaginal health, especially during hormonal changes or after
+            antibiotics.</p>
+      </div>
+   </div>
+</div>
+
+
+<style>
+   .cntr {
+      padding: 20px;
+   }
+
+   .cntr h4 {
+      text-align: center;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+   }
+
+   .sngl {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+   }
+
+   .snle {
+      padding: 40px;
+      background: #eee;
+      text-align: center;
+      margin: 0 auto;
+   }
+   
+  .snle p {
+    width: 70%;
+    margin: 0 auto;
+}
+
+
+</style>

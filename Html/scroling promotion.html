@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Document</title>
+</head>
+
+<body>
+
+
+
+<div class="product-benefits">
+   <div class="product-benefits-wrapper">
+      <!-- Benefit 1 -->
+      <div class="benefit-item">
+         <img class="icon" src="{{ 'flower_icon.png' | asset_url }}" alt="Flower Icon">
+         <h4>Supports Balanced Vaginal Flora</h4>
+      </div>
+
+      <!-- Benefit 2 -->
+      <div class="benefit-item">
+         <img class="icon" src="{{ 'shield_icon.png' | asset_url }}" alt="Shield Icon">
+         <h4>Strengthens Natural Defenses</h4>
+      </div>
+
+      <!-- Benefit 3 -->
+      <div class="benefit-item">
+         <img class="icon" src="{{ 'balance_icon.png' | asset_url }}" alt="Balance Icon">
+         <h4>Helps Maintain pH Balance</h4>
+      </div>
+
+      <!-- Benefit 4 -->
+      <div class="benefit-item">
+         <img class="icon" src="{{ 'leaf_icon.png' | asset_url }}" alt="Leaf Icon">
+         <h4>Gentle & Safe for Daily Use</h4>
+      </div>
+
+      <!-- Benefit 5 -->
+      <div class="benefit-item">
+         <img class="icon" src="{{ 'test_tube_icon.png' | asset_url }}" alt="Test Tube Icon">
+         <h4>Clinically Backed Ingredients</h4>
+      </div>
+
+      <!-- Benefit 6 -->
+      <div class="benefit-item">
+         <img class="icon" src="{{ 'confidence_icon.png' | asset_url }}" alt="Confidence Icon">
+         <h4>Feel Fresh & Confident</h4>
+      </div>
+   </div>
+</div>
+
+<style>
+   .product-benefits {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      overflow: hidden;
+      /* Hide overflowing content */
+      max-width: 100%;
+      /* Full width */
+      margin-top: 30px;
+      /* Add some margin to the top */
+   }
+
+   .product-benefits-wrapper {
+      display: flex;
+      gap: 20px;
+      animation: scroll 20s linear infinite;
+      /* Continuous horizontal scroll effect */
+   }
+
+   .benefit-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 10px 20px;
+      white-space: nowrap;
+      /* Prevent text wrapping */
+   }
+
+   .icon {
+      width: 24px;
+      /* Adjust size as needed */
+      height: 24px;
+      /* Adjust size as needed */
+   }
+
+   h4 {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0;
+   }
+
+   /* Scroll animation */
+   @keyframes scroll {
+      0% {
+         transform: translateX(100%);
+      }
+
+      100% {
+         transform: translateX(-100%);
+      }
+   }
+</style>
+
+
+
+
+
+
+
+
+
+
+</body>
+
+</html>
