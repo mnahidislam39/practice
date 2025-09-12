@@ -1,0 +1,66 @@
+<section class="image-text-section" style="display: flex; align-items: center; gap: 20px; padding: 20px 0;">
+  {% if section.settings.image != blank %}
+    <div class="image-wrapper" style="flex: 1;">
+      <img
+        src="{{ section.settings.image | img_url: '600x600' }}"
+        alt="{{ section.settings.alt_text | escape }}"
+        style="width: 100%; height: auto; object-fit: contain;"
+      >
+    </div>
+  {% endif %}
+
+  <div class="text-wrapper" style="flex: 1;">
+    <h2>{{ section.settings.heading }}</h2>
+    <p>{{ section.settings.text }}</p>
+    <a href="{{ section.settings.button_link }}" class="btn" style> {{ section.settings.button_text }}</a>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "ImageWithText",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image"
+    },
+    {
+      "type": "text",
+      "id": "alt_text",
+      "label": "Image Alt Text",
+      "default": "Image description"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Your Heading Here"
+    },
+    {
+      "type": "textarea",
+      "id": "text",
+      "label": "Text",
+      "default": "Add your descriptive text here."
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "button_text",
+      "default": "Shop Now"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "button_link"
+    }
+  ],
+
+  "presets": [
+    {
+      "name": "ImageWithText",
+      "category": "Custom"
+    }
+  ]
+}
+{% endschema %}
