@@ -2,9 +2,10 @@
   {% if section.settings.image != blank %}
     <div class="image-wrapper" style="flex: 1;">
       <img
-        src="{{ section.settings.image | img_url: '600x600' }}"
+        src="{{ section.settings.image | image_url }}"
+        width="auto"
+        height="auto"
         alt="{{ section.settings.alt_text | escape }}"
-        style="width: 100%; height: auto; object-fit: contain;"
       >
     </div>
   {% endif %}
