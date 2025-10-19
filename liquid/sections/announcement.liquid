@@ -1,0 +1,107 @@
+{% comment %}
+  Sliding Announcement Bar - One by One (LTR)
+{% endcomment %}
+<div class="announcement-bar">
+  <div class="announcement-slider">
+    {% for block in section.blocks %}
+      <div class="announcement-slide">
+        <p>{{ block.settings.text }}</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+  .announcement-bar {
+    background: {{ section.settings.bg_color }};
+    color: {{ section.settings.text_color }};
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+    font-size: 15px;
+    padding: 10px 0;
+  }
+
+  .announcement-slider {
+    display: flex;
+    transition: transform 0.6s ease-in-out;
+    width: 100%;
+  }
+
+  .announcement-slide {
+    min-width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const slider = document.querySelector('.announcement-slider');
+    const slides = document.querySelectorAll('.announcement-slide');
+    let index = 0;
+    const total = slides.length;
+
+    // Clone first slide for smooth loop
+    const firstClone = slides[0].cloneNode(true);
+    slider.appendChild(firstClone);
+
+    function showNextSlide() {
+      index++;
+      slider.style.transform = `translateX(-${index * 100}%)`;
+      slider.style.transition = 'transform 0.6s ease-in-out';
+
+      // Reset when it reaches the end
+      if (index === total) {
+        setTimeout(() => {
+          slider.style.transition = 'none';
+          slider.style.transform = 'translateX(0)';
+          index = 0;
+        }, 700);
+      }
+    }
+
+    setInterval(showNextSlide, 3000); // every 3 seconds
+  });
+</script>
+
+{% schema %}
+{
+  "name": " Announcement Bar (LTR)",
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "text",
+      "name": "Announcement Message",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Message Text",
+          "default": "Free Shipping on All Orders!"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 5,
+  "presets": [
+    {
+      "name": "Sliding Announcement Bar (LTR)"
+    }
+  ]
+}
+{% endschema %}
