@@ -1,11 +1,28 @@
 // Show arrows for tabs slide html structure
 
-{
-  /* <div class="arrows_btn"> 
+/*
+  
+  <div class="arrows_btn"> 
          <button class="tabs-arrow tabs-arrow--left" aria-label="Previous"><span>‹</span></button>          
           <button class="tabs-arrow tabs-arrow--right" aria-label="Next"><span>›</span></button>
-</div> */
+</div> 
+button.tabs-arrow span {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  background: #000000;
+  color: #fff;
+  border-radius: 50px;
+  align-items: center;
+  justify-content: center;
 }
+.arrows_btn {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding-top: 16px;
+}
+*/
 
 document.addEventListener("DOMContentLoaded", function () {
   const tabsWrapper = document.querySelector(".m-tabs__wrapper");
