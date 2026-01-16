@@ -1,0 +1,290 @@
+{% if section.blocks.size > 0 %}
+  <div
+    class="announcement-bar"
+    style="
+      background: {{ section.settings.bg_color }};
+      color: {{ section.settings.text_color }};
+      padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px 0;
+    "
+  >
+    <!-- SCROLL / MARQUEE MODE -->
+    <div
+      class="announcement-marquee"
+      data-direction="{{ section.settings.scroll_direction }}"
+      data-pause="{{ section.settings.pause_on_hover }}"
+      data-speed-desktop="{{ section.settings.scroll_speed_desktop }}"
+      data-speed-mobile="{{ section.settings.scroll_speed_mobile }}"
+    >
+      <div class="marquee-track">
+        {% for block in section.blocks %}
+          <a class="marquee-item" href="{{ block.settings.link }}">
+            {% if block.settings.icon != blank %}
+              <img src="{{ block.settings.icon | image_url: width: 40 }}" class="marquee-icon" alt="" loading="lazy">
+            {% endif %}
+            <span class="marquee-text">{{ block.settings.text }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<style>
+  .announcement-marquee {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .marquee-track {
+    display: flex;
+    will-change: transform;
+  }
+
+  .marquee-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 32px;
+    white-space: nowrap;
+    text-decoration: none;
+    color: inherit;
+    font-size: {{ section.settings.font_size }}px;
+  }
+
+  .marquee-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+  }
+
+  .marquee-text p {
+    margin: 0;
+  }
+
+  /* Pause on hover */
+  .announcement-marquee.pause:hover .marquee-track {
+    animation-play-state: paused;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .marquee-item {
+      font-size: {{ section.settings.font_size | minus: 2 }}px;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const marquee = document.querySelector('.announcement-marquee');
+    if (!marquee) return;
+
+    const track = marquee.querySelector('.marquee-track');
+    const items = Array.from(track.children);
+    const direction = marquee.dataset.direction || 'left';
+    const pause = marquee.dataset.pause === 'true';
+    const speedDesktop = parseInt(marquee.dataset.speedDesktop) || 25;
+    const speedMobile = parseInt(marquee.dataset.speedMobile) || 18;
+
+    const isMobile = window.innerWidth < 768;
+    const speed = isMobile ? speedMobile : speedDesktop;
+
+    // ========= DYNAMIC CLONE FOR FULL WIDTH =========
+    const marqueeWidth = marquee.offsetWidth;
+    let totalWidth = 0;
+
+    // calculate initial total width
+    items.forEach((item) => (totalWidth += item.offsetWidth));
+
+    // clone items until total width >= marquee width * 2 (to allow smooth scroll)
+    let i = 0;
+    while (totalWidth < marqueeWidth * 2) {
+      const clone = items[i % items.length].cloneNode(true);
+      track.appendChild(clone);
+      totalWidth += clone.offsetWidth;
+      i++;
+    }
+
+    // ========= ANIMATION =========
+    let pos = 0;
+    function step() {
+      const fps = 60;
+      const distancePerFrame = marqueeWidth / speed / fps; // pixels per frame
+
+      pos += distancePerFrame;
+      if (direction === 'left') {
+        if (pos >= totalWidth / 2) pos = 0; // reset
+        track.style.transform = `translateX(-${pos}px)`;
+      } else {
+        if (pos >= totalWidth / 2) pos = 0;
+        track.style.transform = `translateX(${pos}px)`;
+      }
+
+      if (!pause || (pause && !marquee.matches(':hover'))) {
+        requestAnimationFrame(step);
+      } else {
+        requestAnimationFrame(step);
+      }
+    }
+    step();
+
+    // Recalculate on resize
+    window.addEventListener('resize', () => {
+      const marqueeWidthNew = marquee.offsetWidth;
+      let totalWidthNew = 0;
+      const itemsNew = Array.from(track.children);
+      itemsNew.forEach((item) => (totalWidthNew += item.offsetWidth));
+
+      let j = 0;
+      while (totalWidthNew < marqueeWidthNew * 2) {
+        const clone = itemsNew[j % itemsNew.length].cloneNode(true);
+        track.appendChild(clone);
+        totalWidthNew += clone.offsetWidth;
+        j++;
+      }
+      totalWidth = totalWidthNew;
+    });
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Advanced Announcement Bar",
+  "settings": [
+    {
+      "type": "select",
+      "id": "animation_type",
+      "label": "Animation type",
+      "default": "slide",
+      "options": [
+        { "value": "slide", "label": "Slide" },
+        { "value": "scroll", "label": "Scroll / Marquee" }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay",
+      "label": "Enable auto slide",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "slide_delay",
+      "label": "Slide delay (ms)",
+      "min": 1000,
+      "max": 8000,
+      "step": 500,
+      "default": 3000
+    },
+    {
+      "type": "select",
+      "id": "scroll_direction",
+      "label": "Scroll direction",
+      "default": "left",
+      "options": [
+        { "value": "left", "label": "Right → Left" },
+        { "value": "right", "label": "Left → Right" }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "pause_on_hover",
+      "label": "Pause on hover",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "scroll_speed_desktop",
+      "label": "Scroll speed (Desktop sec)",
+      "min": 4,
+      "max": 40,
+      "step": 1,
+      "default": 25
+    },
+    {
+      "type": "range",
+      "id": "scroll_speed_mobile",
+      "label": "Scroll speed (Mobile sec)",
+      "min": 4,
+      "max": 40,
+      "step": 1,
+      "default": 18
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows",
+      "label": "Show arrows (slide mode only)",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "label": "Font size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "default": 10
+    }
+  ],
+  "blocks": [
+    {
+      "type": "announcement",
+      "name": "Announcement",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "Icon (optional)"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Free Shipping Worldwide</p>"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link (optional)"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Advanced Announcement Bar",
+      "blocks": [{ "type": "announcement" }, { "type": "announcement" }]
+    }
+  ]
+}
+{% endschema %}
