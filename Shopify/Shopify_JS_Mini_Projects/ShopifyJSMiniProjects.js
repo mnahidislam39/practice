@@ -26,5 +26,3 @@ document.getElementById("decrease").addEventListener("click", function () {
     console.log(quantity);
   }
 });
-
-// 3️⃣ Price Calculator
