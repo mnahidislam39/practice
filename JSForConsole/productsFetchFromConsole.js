@@ -2444,3 +2444,238 @@
 
   start();
 })();
+
+//১. Header Highlighting: এখন কনসোলে প্রতিটি আইটেমের টাইটেল নীল রঙের ব্যাকগ্রাউন্ডে বড় করে আসবে। ২. Audit Sub-line: টাইটেলের ঠিক নিচেই সবুজ রঙে SKU, সাইজ এবং ছবির সংখ্যা দেখাবে। ৩. Shopify Alignment: CSV ফরম্যাটটি শপিফাই স্ট্যান্ডার্ড অনুযায়ী রাখা হয়েছে যাতে আপলোড করার সময় কোনো কলাম মিস না হয়।
+
+(async function () {
+  let allProducts = [];
+  let uniqueProductCount = 0;
+  let errorList = [];
+  let pageCount = 1;
+
+  console.log(
+    "%c [SYSTEM] ডাটা সংগ্রহ শুরু হচ্ছে... প্রতিটি প্রোডাক্টের বিস্তারিত রিপোর্ট দেখানো হবে। ",
+    "background: #111; color: #00ff00; padding: 5px; font-weight: bold;",
+  );
+
+  async function getProductDetails(
+    url,
+    productName,
+    currentItem,
+    totalItems,
+    retries = 3,
+  ) {
+    for (let i = 0; i < retries; i++) {
+      try {
+        // প্রথমে প্রোডাক্টের নাম বড় করে দেখানো হচ্ছে
+        console.log(
+          `%c 📦 [${currentItem}/${totalItems}] PRODUCT: ${productName.toUpperCase()}`,
+          "color: #ffffff; background: #2980b9; padding: 2px 5px; font-weight: bold;",
+        );
+
+        let response = await fetch(url);
+        if (!response.ok)
+          throw new Error(`Server Response: ${response.status}`);
+
+        let buffer = await response.arrayBuffer();
+        let decoder = new TextDecoder("utf-8");
+        let text = decoder.decode(buffer);
+        let parser = new DOMParser();
+        let doc = parser.parseFromString(text, "text/html");
+
+        // ইমেজ সংগ্রহ
+        let imgElements = doc.querySelectorAll(
+          "#itemimatges img, .jcarousel li img",
+        );
+        let imageList = Array.from(imgElements).map((img) =>
+          img.src.replace("/mobile", "/"),
+        );
+        let uniqueImages = [...new Set(imageList)];
+        if (uniqueImages.length === 0)
+          uniqueImages.push(doc.querySelector("#my_image")?.src || "");
+
+        // সাইজ সংগ্রহ
+        let sizeOptions = Array.from(doc.querySelectorAll("#boxsiz0 option"))
+          .map((opt) => opt.innerText.trim())
+          .filter(
+            (s) =>
+              s && !s.toLowerCase().includes("selecciona") && !s.includes("--"),
+          );
+
+        // ডেসক্রিপশন সংগ্রহ
+        let introText = doc.querySelector("h2")?.innerText.trim() || "";
+        let featuresList = Array.from(doc.querySelectorAll("#itemtxt ul li"))
+          .map((li) => `<li>${li.innerText.trim()}</li>`)
+          .join("");
+        let bodyHTML = `<div><p>${introText}</p><ul>${featuresList}</ul></div>`;
+
+        // SKU সংগ্রহ
+        let skuRef = "SKU-UNKNOWN";
+        let h4Elements = doc.querySelectorAll("h4");
+        for (let h4 of h4Elements) {
+          if (h4.innerText.includes("REF:")) {
+            skuRef = h4.innerText.replace("REF:", "").trim();
+            break;
+          }
+        }
+
+        // আপনার অনুরোধ অনুযায়ী নিচে বাকি ইনফো
+        console.log(
+          `%c    🆔 SKU: ${skuRef} | 📏 Sizes: ${sizeOptions.length} | 🖼️ Images: ${uniqueImages.length} | 📝 Desc: ${bodyHTML.length > 50 ? "✅" : "❌"}`,
+          "color: #27ae60; font-weight: bold;",
+        );
+
+        return { images: uniqueImages, sizes: sizeOptions, bodyHTML, skuRef };
+      } catch (err) {
+        if (i === retries - 1) {
+          console.log(
+            `%c    ❌ ব্যর্থ: ${productName} (Error: ${err.message})`,
+            "background: red; color: white;",
+          );
+          errorList.push(productName);
+        } else {
+          await new Promise((r) => setTimeout(r, 2000));
+        }
+      }
+    }
+    return null;
+  }
+
+  async function start() {
+    while (true) {
+      let items = document.querySelectorAll(".itemIN");
+      if (items.length === 0) break;
+
+      let totalItemsInPage = items.length;
+      console.log(
+        `%c \n--- 📄 পেজ: ${pageCount} (আইটেম সংখ্যা: ${totalItemsInPage}) ---`,
+        "background: #34495e; color: white; padding: 5px 10px;",
+      );
+
+      for (let i = 0; i < items.length; i++) {
+        let item = items[i];
+        let linkEl = item.querySelector("h3 a");
+        if (!linkEl) continue;
+
+        let titleParts = linkEl.innerText.trim().split("\n");
+        let cleanTitle = titleParts[titleParts.length - 1].trim();
+        let price =
+          item
+            .querySelector("h5")
+            ?.childNodes[0].textContent.trim()
+            .replace("€", "")
+            .replace(",", ".")
+            .trim() || "0";
+        let handle = cleanTitle
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+
+        let details = await getProductDetails(
+          linkEl.href,
+          cleanTitle,
+          i + 1,
+          totalItemsInPage,
+        );
+
+        if (details) {
+          uniqueProductCount++;
+          let totalRows = Math.max(
+            details.sizes.length,
+            details.images.length,
+            1,
+          );
+
+          for (let j = 0; j < totalRows; j++) {
+            let isFirstRow = j === 0;
+            let size = details.sizes[j] || "";
+            let imgSrc = details.images[j] || "";
+
+            allProducts.push({
+              Handle: handle,
+              Title: isFirstRow ? cleanTitle : "",
+              "Body (HTML)": isFirstRow ? details.bodyHTML : "",
+              Vendor: isFirstRow ? "Kangroute" : "",
+              Type: isFirstRow ? "Motorcycle Gear" : "",
+              Tags: isFirstRow ? "Goyamoto, Motorcycle" : "",
+              Published: "TRUE",
+              "Option1 Name":
+                (isFirstRow && details.sizes.length > 0) || size
+                  ? "Size"
+                  : isFirstRow
+                    ? "Title"
+                    : "",
+              "Option1 Value":
+                size ||
+                (isFirstRow && details.sizes.length === 0
+                  ? "Default Title"
+                  : ""),
+              "Variant SKU": size
+                ? `${details.skuRef}-${size.split(" ")[0]}`
+                : isFirstRow
+                  ? details.skuRef
+                  : "",
+              "Variant Grams": "0",
+              "Variant Inventory Tracker": size || isFirstRow ? "shopify" : "",
+              "Variant Inventory Qty": size || isFirstRow ? "100" : "",
+              "Variant Price": size || isFirstRow ? price : "",
+              "Image Src": imgSrc,
+              "Image Position": imgSrc ? j + 1 : "",
+              "Image Alt Text": isFirstRow ? cleanTitle : "",
+              "Variant Image":
+                size && imgSrc ? imgSrc : isFirstRow && imgSrc ? imgSrc : "",
+              Status: isFirstRow ? "active" : "",
+            });
+          }
+          // স্পেসার রো
+          allProducts.push(
+            Object.fromEntries(Object.keys(allProducts[0]).map((k) => [k, ""])),
+          );
+        }
+        await new Promise((r) => setTimeout(r, 800));
+      }
+
+      let nextBtn = Array.from(document.querySelectorAll("#paginator a")).find(
+        (a) => a.innerHTML.includes("pagiDER") || a.innerText.includes("»"),
+      );
+
+      if (nextBtn) {
+        console.log(
+          `%c পেজ ${pageCount} সম্পন্ন। পরবর্তী পেজে যাচ্ছি...`,
+          "color: #9b59b6;",
+        );
+        nextBtn.click();
+        pageCount++;
+        await new Promise((r) => setTimeout(r, 6000));
+      } else {
+        break;
+      }
+    }
+    downloadCSV();
+  }
+
+  function downloadCSV() {
+    if (allProducts.length === 0) return;
+    const headers = Object.keys(allProducts[0]).join(",");
+    const rows = allProducts
+      .map((p) =>
+        Object.values(p)
+          .map((v) => `"${(v || "").toString().replace(/"/g, '""')}"`)
+          .join(","),
+      )
+      .join("\n");
+    const csvContent = "\uFEFF" + headers + "\n" + rows;
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `kangroute_perfect_import.csv`;
+    link.click();
+
+    console.log(
+      "%c সমাপ্ত! মোট সফল প্রোডাক্ট: " + uniqueProductCount,
+      "color: #2ecc71; font-weight: bold; font-size: 16px;",
+    );
+  }
+
+  start();
+})();
