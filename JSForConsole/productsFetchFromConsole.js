@@ -2549,7 +2549,7 @@
       let totalItemsInPage = items.length;
       console.log(
         `%c \n--- 📄 পেজ: ${pageCount} (আইটেম সংখ্যা: ${totalItemsInPage}) ---`,
-        "background: #34495e; color: white; padding: 5px 10px;",
+        "background: #000000; color: white; padding: 5px 10px;",
       );
 
       for (let i = 0; i < items.length; i++) {
@@ -2674,6 +2674,1133 @@
     console.log(
       "%c সমাপ্ত! মোট সফল প্রোডাক্ট: " + uniqueProductCount,
       "color: #2ecc71; font-weight: bold; font-size: 16px;",
+    );
+  }
+
+  start();
+})();
+
+//আপনার দেওয়া কোডটি বিশ্লেষণ করে আমি সবকটি দাবি (URL-ভিত্তিক Handle, Variant Barcode, এবং উন্নত Console Report) একত্র করে একটি মাস্টার স্ক্রিপ্ট তৈরি করেছি। এটি শপিফাই ইম্পোর্টের জন্য একদম নিখুঁত হবে।
+
+(async function () {
+  let allProducts = [];
+  let uniqueProductCount = 0;
+  let errorList = [];
+  let pageCount = 1;
+
+  console.log(
+    "%c [SYSTEM] ডাটা সংগ্রহ শুরু হচ্ছে... প্রতিটি প্রোডাক্টের অডিট রিপোর্ট দেখানো হবে। ",
+    "background: #111; color: #00ff00; padding: 5px; font-weight: bold;",
+  );
+
+  async function getProductDetails(
+    url,
+    productName,
+    currentItem,
+    totalItems,
+    retries = 3,
+  ) {
+    // URL থেকে আইডি এবং স্লাগ নিয়ে হ্যান্ডেল তৈরি
+    let urlParts = url.split("/");
+    let handleFromUrl =
+      urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2];
+    let productId = handleFromUrl.split("-")[0]; // বারকোড তৈরির জন্য আইডি
+
+    for (let i = 0; i < retries; i++) {
+      try {
+        // ১. প্রথমে বড় করে প্রোডাক্ট টাইটেল
+        console.log(
+          `%c 📦 [${currentItem}/${totalItems}] PRODUCT: ${productName.toUpperCase()}`,
+          "color: #ffffff; background: #2980b9; padding: 2px 5px; font-weight: bold;",
+        );
+
+        let response = await fetch(url);
+        if (!response.ok)
+          throw new Error(`Server Response: ${response.status}`);
+
+        let buffer = await response.arrayBuffer();
+        let decoder = new TextDecoder("utf-8");
+        let text = decoder.decode(buffer);
+        let parser = new DOMParser();
+        let doc = parser.parseFromString(text, "text/html");
+
+        // ইমেজ সংগ্রহ
+        let imgElements = doc.querySelectorAll(
+          "#itemimatges img, .jcarousel li img",
+        );
+        let imageList = Array.from(imgElements).map((img) =>
+          img.src.replace("/mobile", "/"),
+        );
+        let uniqueImages = [...new Set(imageList)];
+        if (uniqueImages.length === 0)
+          uniqueImages.push(doc.querySelector("#my_image")?.src || "");
+
+        // সাইজ সংগ্রহ
+        let sizeOptions = Array.from(doc.querySelectorAll("#boxsiz0 option"))
+          .map((opt) => opt.innerText.trim())
+          .filter(
+            (s) =>
+              s && !s.toLowerCase().includes("selecciona") && !s.includes("--"),
+          );
+
+        // ডেসক্রিপশন সংগ্রহ
+        let introText = doc.querySelector("h2")?.innerText.trim() || "";
+        let featuresList = Array.from(doc.querySelectorAll("#itemtxt ul li"))
+          .map((li) => `<li>${li.innerText.trim()}</li>`)
+          .join("");
+        let bodyHTML = `<div><p>${introText}</p><ul>${featuresList}</ul></div>`;
+
+        // SKU সংগ্রহ
+        let skuRef = "SKU-UNKNOWN";
+        let h4Elements = doc.querySelectorAll("h4");
+        for (let h4 of h4Elements) {
+          if (h4.innerText.includes("REF:")) {
+            skuRef = h4.innerText.replace("REF:", "").trim();
+            break;
+          }
+        }
+
+        // বারকোড জেনারেশন (স্যাম্পল দেখার জন্য)
+        let sampleBarcode = `888${productId}00`;
+
+        // ২. SKU, Barcode এবং Image এক লাইনে অডিট
+        console.log(
+          `%c    🆔 SKU: ${skuRef} | 📊 Barcode: ${sampleBarcode} | 🖼️ Images: ${uniqueImages.length}`,
+          "color: #27ae60; font-weight: bold;",
+        );
+
+        // ৩. ডেসক্রিপশন স্ট্যাটাস তার নিচে
+        console.log(
+          `%c    📝 Desc: ${bodyHTML.length > 50 ? "✅ সংগৃহীত" : "❌ পাওয়া যায়নি"}`,
+          "color: #e67e22;",
+        );
+
+        return {
+          images: uniqueImages,
+          sizes: sizeOptions,
+          bodyHTML,
+          skuRef,
+          handleFromUrl,
+          productId,
+        };
+      } catch (err) {
+        if (i === retries - 1) {
+          console.log(
+            `%c    ❌ ব্যর্থ: ${productName} (Error: ${err.message})`,
+            "background: red; color: white;",
+          );
+          errorList.push(productName);
+        } else {
+          await new Promise((r) => setTimeout(r, 2000));
+        }
+      }
+    }
+    return null;
+  }
+
+  async function start() {
+    while (true) {
+      let items = document.querySelectorAll(".itemIN");
+      if (items.length === 0) break;
+
+      let totalItemsInPage = items.length;
+      console.log(
+        `%c \n--- 📄 পেজ: ${pageCount} (আইটেম সংখ্যা: ${totalItemsInPage}) ---`,
+        "background: #000000; color: white; padding: 5px 10px;",
+      );
+
+      for (let i = 0; i < items.length; i++) {
+        let item = items[i];
+        let linkEl = item.querySelector("h3 a");
+        if (!linkEl) continue;
+
+        let titleParts = linkEl.innerText.trim().split("\n");
+        let cleanTitle = titleParts[titleParts.length - 1].trim();
+        let price =
+          item
+            .querySelector("h5")
+            ?.childNodes[0].textContent.trim()
+            .replace("€", "")
+            .replace(",", ".")
+            .trim() || "0";
+
+        let details = await getProductDetails(
+          linkEl.href,
+          cleanTitle,
+          i + 1,
+          totalItemsInPage,
+        );
+
+        if (details) {
+          uniqueProductCount++;
+          let totalRows = Math.max(
+            details.sizes.length,
+            details.images.length,
+            1,
+          );
+
+          for (let j = 0; j < totalRows; j++) {
+            let isFirstRow = j === 0;
+            let size = details.sizes[j] || "";
+            let imgSrc = details.images[j] || "";
+
+            // ইউনিক বারকোড তৈরির লজিক
+            let barcodeSuffix = size ? size.charCodeAt(0).toString() : "00";
+            let generatedBarcode = `888${details.productId}${barcodeSuffix}`;
+
+            allProducts.push({
+              Handle: details.handleFromUrl, // URL থেকে হ্যান্ডেল
+              Title: isFirstRow ? cleanTitle : "",
+              "Body (HTML)": isFirstRow ? details.bodyHTML : "",
+              Vendor: isFirstRow ? "Kangroute" : "",
+              "Product Category": "",
+              Type: isFirstRow ? "Motorcycle Gear" : "",
+              Tags: isFirstRow ? "Goyamoto, Motorcycle" : "",
+              Published: "TRUE",
+              "Option1 Name":
+                (isFirstRow && details.sizes.length > 0) || size
+                  ? "Size"
+                  : isFirstRow
+                    ? "Title"
+                    : "",
+              "Option1 Value":
+                size ||
+                (isFirstRow && details.sizes.length === 0
+                  ? "Default Title"
+                  : ""),
+              "Variant SKU": size
+                ? `${details.skuRef}-${size.split(" ")[0]}`
+                : isFirstRow
+                  ? details.skuRef
+                  : "",
+              "Variant Grams": "0",
+              "Variant Inventory Tracker": size || isFirstRow ? "shopify" : "",
+              "Variant Inventory Qty": size || isFirstRow ? "100" : "",
+              "Variant Inventory Policy": size || isFirstRow ? "deny" : "",
+              "Variant Fulfillment Service": size || isFirstRow ? "manual" : "",
+              "Variant Price": size || isFirstRow ? price : "",
+              "Variant Requires Shipping": "TRUE",
+              "Variant Taxable": "TRUE",
+              "Variant Barcode": size || isFirstRow ? generatedBarcode : "", // বারকোড কলাম
+              "Image Src": imgSrc,
+              "Image Position": imgSrc ? j + 1 : "",
+              "Image Alt Text": isFirstRow ? cleanTitle : "",
+              "Variant Image":
+                size && imgSrc ? imgSrc : isFirstRow && imgSrc ? imgSrc : "",
+              Status: isFirstRow ? "active" : "",
+            });
+          }
+          allProducts.push(
+            Object.fromEntries(Object.keys(allProducts[0]).map((k) => [k, ""])),
+          );
+        }
+        await new Promise((r) => setTimeout(r, 800));
+      }
+
+      let nextBtn = Array.from(document.querySelectorAll("#paginator a")).find(
+        (a) => a.innerHTML.includes("pagiDER") || a.innerText.includes("»"),
+      );
+
+      if (nextBtn) {
+        console.log(
+          `%c পেজ ${pageCount} সম্পন্ন। পরবর্তী পেজে যাচ্ছি...`,
+          "color: #9b59b6;",
+        );
+        nextBtn.click();
+        pageCount++;
+        await new Promise((r) => setTimeout(r, 6000));
+      } else {
+        break;
+      }
+    }
+    downloadCSV();
+  }
+
+  function downloadCSV() {
+    if (allProducts.length === 0) return;
+    const headers = Object.keys(allProducts[0]).join(",");
+    const rows = allProducts
+      .map((p) =>
+        Object.values(p)
+          .map((v) => `"${(v || "").toString().replace(/"/g, '""')}"`)
+          .join(","),
+      )
+      .join("\n");
+    const csvContent = "\uFEFF" + headers + "\n" + rows;
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `kangroute_final_master.csv`;
+    link.click();
+
+    console.log(
+      "%c সমাপ্ত! মোট সফল প্রোডাক্ট: " + uniqueProductCount,
+      "color: #2ecc71; font-weight: bold; font-size: 16px;",
+    );
+  }
+
+  start();
+})();
+
+// Final with barcode skus size image desc title handle price variant image url
+
+(async function () {
+  let allProducts = [];
+  let uniqueProductCount = 0;
+  let pageCount = 1;
+
+  console.clear();
+  console.log(
+    "%c 🚀 [SYSTEM] স্ক্র্যাপার স্টার্ট হচ্ছে... ডাটা সংগ্রহ এবং লাইভ অডিট শুরু হলো। ",
+    "background: #222; color: #ffeb3b; padding: 10px; font-weight: bold; border-left: 5px solid #ff9800; font-size: 14px;",
+  );
+
+  async function getProductDetails(url, productName, currentItem, totalItems) {
+    try {
+      // URL থেকে হ্যান্ডেল সংগ্রহ
+      let urlParts = url.split("/");
+      let handleFromUrl =
+        urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2];
+
+      // কনসোলে বড় করে নাম দেখানো (ব্যাকগ্রাউন্ড কালারসহ)
+      console.log(
+        `%c 🔎 বর্তমানে কাজ চলছে: ${productName.toUpperCase()} `,
+        "background: #000000; color: white; padding: 4px; border-radius: 3px; font-weight: bold;",
+      );
+
+      let response = await fetch(url);
+      let buffer = await response.arrayBuffer();
+      let text = new TextDecoder("utf-8").decode(buffer);
+      let parser = new DOMParser();
+      let doc = parser.parseFromString(text, "text/html");
+
+      // ১. SKU সংগ্রহ (REF: GM140 NEGRO)
+      let mainSku = "SKU-UNKNOWN";
+      let h4s = doc.querySelectorAll("h4");
+      for (let h4 of h4s) {
+        if (h4.innerText.includes("REF:")) {
+          mainSku = h4.innerText.split("REF:")[1].trim().replace(/"/g, "");
+          break;
+        }
+      }
+
+      // ২. ইমেজ সংগ্রহ
+      let imgElements = doc.querySelectorAll(
+        "#itemimatges img, .jcarousel li img",
+      );
+      let uniqueImages = [
+        ...new Set(
+          Array.from(imgElements).map((img) => img.src.replace("/mobile", "/")),
+        ),
+      ];
+      if (uniqueImages.length === 0)
+        uniqueImages.push(doc.querySelector("#my_image")?.src || "");
+
+      // ৩. সাইজ সংগ্রহ
+      let sizes = Array.from(doc.querySelectorAll("#boxsiz0 option"))
+        .map((opt) => opt.innerText.trim())
+        .filter(
+          (s) =>
+            s && !s.toLowerCase().includes("selecciona") && !s.includes("--"),
+        );
+
+      // ৪. বডি/ডেসক্রিপশন
+      let introText = doc.querySelector("h2")?.innerText.trim() || "";
+      let featuresList = Array.from(doc.querySelectorAll("#itemtxt ul li"))
+        .map((li) => `<li>${li.innerText.trim()}</li>`)
+        .join("");
+      let bodyHTML = `<div><p>${introText}</p><ul>${featuresList}</ul></div>`;
+
+      // লাইভ ডিটেইলস রিপোর্ট (কনসোলে কালারফুল স্টাইল)
+      console.log(
+        `%c  ⮕ 📊 প্রোগ্রেস: [${currentItem}/${totalItems}] | 🆔 SKU: ${mainSku} | 🖼️ ছবি: ${uniqueImages.length} | 📏 সাইজ: ${sizes.length} `,
+        "color: #2701ff; font-weight: bold;",
+      );
+      console.log(
+        `%c  ⮕ 🔗 হ্যান্ডেল: ${handleFromUrl}`,
+        "color: #00be56; font-style: italic;",
+      );
+
+      return { images: uniqueImages, sizes, bodyHTML, mainSku, handleFromUrl };
+    } catch (err) {
+      console.log(
+        `%c ❌ এরর: ${productName} সংগ্রহ করা যায়নি! `,
+        "background: red; color: white;",
+      );
+      return null;
+    }
+  }
+
+  async function start() {
+    while (true) {
+      let items = document.querySelectorAll(".itemIN");
+      if (items.length === 0) break;
+
+      console.log(
+        `%c \n 📄 পেজ: ${pageCount} | আইটেম সংখ্যা: ${items.length} ------------------- `,
+        "background: #444; color: #23f150; padding: 5px; font-weight: bold;",
+      );
+
+      for (let i = 0; i < items.length; i++) {
+        let item = items[i];
+        let linkEl = item.querySelector("h3 a");
+        if (!linkEl) continue;
+
+        let originalTitle = linkEl.innerText.trim().split("\n").pop().trim();
+        let price =
+          item
+            .querySelector("h5")
+            ?.childNodes[0].textContent.trim()
+            .replace("€", "")
+            .replace(",", ".")
+            .trim() || "0";
+
+        let d = await getProductDetails(
+          linkEl.href,
+          originalTitle,
+          i + 1,
+          items.length,
+        );
+
+        if (d) {
+          uniqueProductCount++;
+          let maxRows = Math.max(d.sizes.length, d.images.length);
+
+          for (let j = 0; j < maxRows; j++) {
+            let isFirstRow = j === 0;
+            let currentSize = d.sizes[j] || "";
+            let currentImg = d.images[j] || "";
+            let isNewVariant = currentSize !== "";
+
+            allProducts.push({
+              Handle: d.handleFromUrl,
+              Title: isFirstRow ? originalTitle : "",
+              "Body (HTML)": isFirstRow ? d.bodyHTML : "",
+              Vendor: isFirstRow ? "Kangroute" : "",
+              Type: isFirstRow ? "Motorcycle Gear" : "",
+              Tags: isFirstRow ? "Goyamoto, Motorcycle" : "",
+              Published: "TRUE",
+              "Option1 Name": isFirstRow
+                ? d.sizes.length > 0
+                  ? "Size"
+                  : "Title"
+                : "",
+              "Option1 Value": currentSize || (isFirstRow ? "TALLA ÚNICA" : ""),
+              "Variant SKU": isNewVariant
+                ? `${d.mainSku}-${currentSize.split(" ")[0]}`
+                : isFirstRow
+                  ? d.mainSku
+                  : "",
+              "Variant Inventory Tracker":
+                isNewVariant || isFirstRow ? "shopify" : "",
+              "Variant Inventory Qty": isNewVariant || isFirstRow ? "100" : "",
+              "Variant Price": isNewVariant || isFirstRow ? price : "",
+              "Variant Requires Shipping":
+                isFirstRow || isNewVariant ? "TRUE" : "",
+              "Variant Taxable": isFirstRow || isNewVariant ? "TRUE" : "",
+              "Image Src": currentImg,
+              "Image Position": currentImg ? j + 1 : "",
+              "Image Alt Text": isFirstRow ? originalTitle : "",
+              "Variant Image": isNewVariant
+                ? currentImg
+                : isFirstRow
+                  ? currentImg
+                  : "",
+              Status: isFirstRow ? "active" : "",
+            });
+          }
+          allProducts.push(
+            Object.fromEntries(Object.keys(allProducts[0]).map((k) => [k, ""])),
+          );
+        }
+        // প্রতি আইটেম পর পর ১ সেকেন্ড ওয়েট যাতে ব্লক না করে
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+
+      let next = Array.from(document.querySelectorAll("#paginator a")).find(
+        (a) => a.innerText.includes("»"),
+      );
+      if (next) {
+        console.log(
+          "%c ⏩ পেজ শেষ। পরবর্তী পেজে যাওয়া হচ্ছে... ",
+          "color: #ea80fc;",
+        );
+        next.click();
+        pageCount++;
+        await new Promise((r) => setTimeout(r, 6000));
+      } else break;
+    }
+    downloadCSV();
+  }
+
+  function downloadCSV() {
+    const headers = Object.keys(allProducts[0]).join(",");
+    const rows = allProducts
+      .map((p) =>
+        Object.values(p)
+          .map((v) => `"${(v || "").toString().replace(/"/g, '""')}"`)
+          .join(","),
+      )
+      .join("\n");
+    const blob = new Blob(["\uFEFF" + headers + "\n" + rows], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `kangroute_live_scraped.csv`;
+    link.click();
+
+    console.log(
+      `%c ✅ মিশন সফল! মোট সংগৃহীত প্রোডাক্ট: ${uniqueProductCount} `,
+      "background: #00c853; color: white; padding: 15px; font-size: 20px; font-weight: bold; border-radius: 5px;",
+    );
+  }
+
+  start();
+})();
+
+//আমি আপনার জন্য কনসোল আউটপুটটি একদম নিখুঁতভাবে সাজিয়েছি যেখানে Title, Handle, এবং SKU একদম সম্পূর্ণ (Full) দেখাবে, আর ডেসক্রিপশন শুধু OK স্ট্যাটাস দেখাবে। এছাড়া Size এবং Image কতটি আছে তাও সংক্ষেপে পাশে থাকবে।
+(async function () {
+  let allProducts = [];
+  let uniqueProductCount = 0;
+  let pageCount = 1;
+
+  console.clear();
+  console.log(
+    "%c 🛰️ FULL DATA MONITOR STARTING... ",
+    "background: #111; color: #00ff00; padding: 10px; font-weight: bold; border: 2px solid #00ff00;",
+  );
+
+  async function getProductDetails(url, productName, currentItem, totalItems) {
+    try {
+      let urlParts = url.split("/");
+      let handle =
+        urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2];
+      let productId = handle.split("-")[0];
+
+      let response = await fetch(url);
+      let buffer = await response.arrayBuffer();
+      let text = new TextDecoder("utf-8").decode(buffer);
+      let parser = new DOMParser();
+      let doc = parser.parseFromString(text, "text/html");
+
+      // SKU logic
+      let sku = "N/A";
+      let h4s = doc.querySelectorAll("h4");
+      for (let h4 of h4s) {
+        if (h4.innerText.includes("REF:")) {
+          sku = h4.innerText.replace("REF:", "").replace(/"/g, "").trim();
+          break;
+        }
+      }
+
+      // Images & Sizes
+      let imgs = [
+        ...new Set(
+          Array.from(
+            doc.querySelectorAll("#itemimatges img, .jcarousel li img"),
+          ).map((img) => img.src.replace("/mobile", "/")),
+        ),
+      ];
+      let sizes = Array.from(doc.querySelectorAll("#boxsiz0 option"))
+        .map((opt) => opt.innerText.trim())
+        .filter(
+          (s) =>
+            s && !s.toLowerCase().includes("selecciona") && !s.includes("--"),
+        );
+
+      let descText = doc.querySelector("h2")?.innerText.trim() || "";
+      let features = Array.from(doc.querySelectorAll("#itemtxt ul li"))
+        .map((li) => `<li>${li.innerText.trim()}</li>`)
+        .join("");
+      let bodyHTML = `<div><p>${descText}</p><ul>${features}</ul></div>`;
+
+      // --- আপনার চাহিদা অনুযায়ী ফুল ডিটেইল কনসোল রিপোর্ট ---
+      console.log(
+        `%c📦 [P${pageCount} | ${currentItem}/${totalItems}] %c${productName.toUpperCase()}`,
+        "color: #888;",
+        "color: #fff; font-weight: bold; background: #222; padding: 2px 5px; border-radius: 3px;",
+      );
+
+      console.log(
+        `%c🔗 Handle: %c${handle} %c| %c🆔 SKU: %c${sku} %c| %c📏 Size: %c${sizes.length > 0 ? sizes.length : "1"} %c| %c🖼️ Img: %c${imgs.length} %c| %c📝 Desc: %c${bodyHTML.length > 30 ? "✅ OK" : "❌ EMPTY"}`,
+        "color: #27ae60; font-weight: bold;",
+        "color: #2ecc71;", // Handle Full
+        "color: #555;",
+        "color: #8e44ad; font-weight: bold;",
+        "color: #9b59b6;", // SKU Full
+        "color: #555;",
+        "color: #f39c12; font-weight: bold;",
+        "color: #f1c40f;", // Size count
+        "color: #555;",
+        "color: #e67e22; font-weight: bold;",
+        "color: #e67e22;", // Img count
+        "color: #555;",
+        "color: #fff; font-weight: bold;",
+        "color: #fff;", // Desc status
+      );
+
+      return { images: imgs, sizes, bodyHTML, sku, handle, productId };
+    } catch (err) {
+      return null;
+    }
+  }
+
+  async function start() {
+    while (true) {
+      let items = document.querySelectorAll(".itemIN");
+      if (items.length === 0) break;
+
+      for (let i = 0; i < items.length; i++) {
+        let item = items[i];
+        let linkEl = item.querySelector("h3 a");
+        if (!linkEl) continue;
+
+        let title = linkEl.innerText.trim().split("\n").pop().trim();
+        let price =
+          item
+            .querySelector("h5")
+            ?.childNodes[0].textContent.trim()
+            .replace("€", "")
+            .replace(",", ".")
+            .trim() || "0";
+
+        let d = await getProductDetails(
+          linkEl.href,
+          title,
+          i + 1,
+          items.length,
+        );
+
+        if (d) {
+          uniqueProductCount++;
+          let maxRows = Math.max(d.sizes.length, d.images.length, 1);
+
+          for (let j = 0; j < maxRows; j++) {
+            let isFirst = j === 0;
+            let currentSize = d.sizes[j] || "";
+            let currentImg = d.images[j] || "";
+            let isNewVariant = currentSize !== "";
+
+            allProducts.push({
+              Handle: d.handle,
+              Title: isFirst ? title : "",
+              "Body (HTML)": isFirst ? d.bodyHTML : "",
+              Vendor: "Kangroute",
+              "Option1 Name": d.sizes.length > 0 ? "Size" : "Title",
+              "Option1 Value": currentSize || "TALLA ÚNICA",
+              "Variant SKU": isNewVariant || isFirst ? d.sku : "",
+              "Variant Price": isNewVariant || isFirst ? price : "",
+              "Variant Barcode":
+                isNewVariant || isFirst ? `888${d.productId}${j}` : "",
+              "Image Src": currentImg,
+              "Image Position": currentImg ? j + 1 : "",
+              Status: "active",
+            });
+          }
+          // স্পেসার রো
+          allProducts.push(
+            Object.fromEntries(Object.keys(allProducts[0]).map((k) => [k, ""])),
+          );
+        }
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+
+      // নেক্সট পেজ লজিক
+      let nextBtn =
+        document.querySelector(".pagiDER a") ||
+        Array.from(document.querySelectorAll("#paginator a")).find((a) =>
+          a.innerText.includes("»"),
+        );
+      if (nextBtn) {
+        console.log(
+          `%c ⏩ পেজ ${pageCount} শেষ। পরবর্তী পেজে যাচ্ছি... `,
+          "color: #9b59b6; font-weight: bold;",
+        );
+        nextBtn.click();
+        pageCount++;
+        await new Promise((r) => setTimeout(r, 8000));
+      } else break;
+    }
+    downloadCSV();
+  }
+
+  function downloadCSV() {
+    const headers = Object.keys(allProducts[0]).join(",");
+    const rows = allProducts
+      .map((p) =>
+        Object.values(p)
+          .map((v) => `"${(v || "").toString().replace(/"/g, '""')}"`)
+          .join(","),
+      )
+      .join("\n");
+    const blob = new Blob(["\uFEFF" + headers + "\n" + rows], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `shopify_full_data_audit.csv`;
+    link.click();
+    console.log(
+      `%c ✅ অডিট সম্পন্ন! মোট প্রোডাক্ট: ${uniqueProductCount} `,
+      "background: #27ae60; color: white; padding: 10px; font-size: 18px;",
+    );
+  }
+
+  start();
+})();
+
+// এই রিপোর্টে আপনি যা যা দেখতে পাবেন:
+// Handle, SKU, Barcode: এগুলো পুরো (Full) দেখাবে।
+// Size: শুধু সংখ্যা দেখাবে (যেমন: Size: 5) যা নির্দেশ করবে কয়টি সাইজ পাওয়া গেছে।
+// Img: শুধু সংখ্যা দেখাবে (যেমন: Img: 3)।
+// Desc: শুধু OK অথবা EMPTY দেখাবে।
+// CSV Columns: আপনার চাহিদামত Handle, Title, Body, Vendor, Type, Tags, Published, Option1 Name/Value, SKU, Barcode, Inventory, Price, Shipping, Taxable, Image Src/Pos/Alt, Variant Image, Status—সবগুলো কলাম ফাইলে থাকবে।
+
+(async function () {
+  let allProducts = [];
+  let uniqueProductCount = 0;
+  let pageCount = 1;
+
+  console.clear();
+  console.log(
+    "%c 🛰️ ডাটা মনিটর চালু... সব কলাম সংগ্রহ করা হচ্ছে। ",
+    "background: #111; color: #00ff00; padding: 10px; font-weight: bold; border: 2px solid #00ff00;",
+  );
+
+  async function getProductDetails(url, productName, currentItem, totalItems) {
+    try {
+      let urlParts = url.split("/");
+      let handle =
+        urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2];
+      let productId = handle.split("-")[0];
+
+      let response = await fetch(url);
+      let buffer = await response.arrayBuffer();
+      let text = new TextDecoder("utf-8").decode(buffer);
+      let parser = new DOMParser();
+      let doc = parser.parseFromString(text, "text/html");
+
+      // SKU Logic
+      let sku = "N/A";
+      let h4s = doc.querySelectorAll("h4");
+      for (let h4 of h4s) {
+        if (h4.innerText.includes("REF:")) {
+          sku = h4.innerText.replace("REF:", "").replace(/"/g, "").trim();
+          break;
+        }
+      }
+
+      // Images & Sizes
+      let imgs = [
+        ...new Set(
+          Array.from(
+            doc.querySelectorAll("#itemimatges img, .jcarousel li img"),
+          ).map((img) => img.src.replace("/mobile", "/")),
+        ),
+      ];
+      let sizes = Array.from(doc.querySelectorAll("#boxsiz0 option"))
+        .map((opt) => opt.innerText.trim())
+        .filter(
+          (s) =>
+            s && !s.toLowerCase().includes("selecciona") && !s.includes("--"),
+        )
+        .map((s) => s.split(" ")[0].split("-")[0].trim());
+
+      let descText = doc.querySelector("h2")?.innerText.trim() || "";
+      let features = Array.from(doc.querySelectorAll("#itemtxt ul li"))
+        .map((li) => `<li>${li.innerText.trim()}</li>`)
+        .join("");
+      let bodyHTML = `<div><p>${descText}</p><ul>${features}</ul></div>`;
+      let barcode = `888${productId}00`;
+
+      // --- আপনার চাহিদা অনুযায়ী কনসোল রিপোর্ট ---
+      console.log(
+        `%c📦 [P${pageCount} | ${currentItem}/${totalItems}] %c${productName.toUpperCase()}`,
+        "color: #888;",
+        "color: #fff; font-weight: bold; background: #222; padding: 2px 5px;",
+      );
+
+      console.log(
+        `%c🔗 Handle: %c${handle} %c| %c🆔 SKU: %c${sku} %c| %c📊 Barcode: %c${barcode} %c| %c📏 Size: %c${sizes.length > 0 ? sizes.length : "1"} %c| %c🖼️ Img: %c${imgs.length} %c| %c📝 Desc: %c${bodyHTML.length > 20 ? "OK" : "EMPTY"}`,
+        "color: #27ae60; font-weight: bold;",
+        "color: #2ecc71;", // Handle
+        "color: #555;",
+        "color: #8e44ad; font-weight: bold;",
+        "color: #9b59b6;", // SKU
+        "color: #555;",
+        "color: #e67e22; font-weight: bold;",
+        "color: #f39c12;", // Barcode
+        "color: #555;",
+        "color: #3498db; font-weight: bold;",
+        "color: #3498db;", // Size Count
+        "color: #555;",
+        "color: #e74c3c; font-weight: bold;",
+        "color: #e74c3c;", // Img Count
+        "color: #555;",
+        "color: #fff; font-weight: bold;",
+        "color: #fff;", // Desc Status
+      );
+
+      return { images: imgs, sizes, bodyHTML, sku, handle, productId, barcode };
+    } catch (err) {
+      return null;
+    }
+  }
+
+  async function start() {
+    while (true) {
+      let items = document.querySelectorAll(".itemIN");
+      if (items.length === 0) break;
+
+      for (let i = 0; i < items.length; i++) {
+        let item = items[i];
+        let linkEl = item.querySelector("h3 a");
+        if (!linkEl) continue;
+
+        let title = linkEl.innerText.trim().split("\n").pop().trim();
+        let price =
+          item
+            .querySelector("h5")
+            ?.childNodes[0].textContent.trim()
+            .replace("€", "")
+            .replace(",", ".")
+            .trim() || "0";
+
+        let d = await getProductDetails(
+          linkEl.href,
+          title,
+          i + 1,
+          items.length,
+        );
+
+        if (d) {
+          uniqueProductCount++;
+          let maxRows = Math.max(d.sizes.length, d.images.length, 1);
+
+          for (let j = 0; j < maxRows; j++) {
+            let isFirst = j === 0;
+            let currentSize = d.sizes[j] || (isFirst ? "TALLA ÚNICA" : "");
+            let currentImg = d.images[j] || "";
+
+            allProducts.push({
+              Handle: d.handle,
+              Title: isFirst ? title : "",
+              "Body (HTML)": isFirst ? d.bodyHTML : "",
+              Vendor: isFirst ? "Kangroute" : "",
+              Type: isFirst ? "Motorcycle Gear" : "",
+              Tags: isFirst ? "Goyamoto, Motorcycle" : "",
+              Published: "TRUE",
+              "Option1 Name": isFirst
+                ? d.sizes.length > 0
+                  ? "Size"
+                  : "Title"
+                : "",
+              "Option1 Value": currentSize,
+              "Variant SKU": currentSize ? d.sku : "",
+              "Variant Barcode": currentSize ? d.barcode : "",
+              "Variant Inventory Tracker": currentSize ? "shopify" : "",
+              "Variant Inventory Qty": currentSize ? "100" : "",
+              "Variant Price": currentSize ? price : "",
+              "Variant Requires Shipping": "TRUE",
+              "Variant Taxable": "TRUE",
+              "Image Src": currentImg,
+              "Image Position": currentImg ? j + 1 : "",
+              "Image Alt Text": isFirst ? title : "",
+              "Variant Image": currentSize && currentImg ? currentImg : "",
+              Status: "active",
+            });
+          }
+          allProducts.push(
+            Object.fromEntries(Object.keys(allProducts[0]).map((k) => [k, ""])),
+          );
+        }
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+
+      let nextBtn =
+        document.querySelector(".pagiDER a") ||
+        Array.from(document.querySelectorAll("#paginator a")).find((a) =>
+          a.innerText.includes("»"),
+        );
+      if (nextBtn) {
+        nextBtn.click();
+        pageCount++;
+        await new Promise((r) => setTimeout(r, 8000));
+      } else break;
+    }
+    downloadCSV();
+  }
+
+  function downloadCSV() {
+    const headers = Object.keys(allProducts[0]).join(",");
+    const rows = allProducts
+      .map((p) =>
+        Object.values(p)
+          .map((v) => `"${(v || "").toString().replace(/"/g, '""')}"`)
+          .join(","),
+      )
+      .join("\n");
+    const blob = new Blob(["\uFEFF" + headers + "\n" + rows], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `shopify_final_ready.csv`;
+    link.click();
+    console.log(
+      `%c ✅ মিশন সফল! মোট প্রোডাক্ট: ${uniqueProductCount} `,
+      "background: #27ae60; color: white; padding: 10px; font-size: 20px; font-weight: bold;",
+    );
+  }
+
+  start();
+})();
+
+// 100% working
+/*Data catch korbe. same title hole next one unique hobe. pages thakle next page e jabe.and Console e shwo korbe: 
+📄 PAGE: 1 | 📦 PRODUCT: 2/12 
+TITLE: GAFA CUSTOM RIDER NEGRA KUM 
+🔗 Handle: 9301-gafa-custom-rider-negra-kum
+🆔 SKU: 105020 RIDER NEGRA KUM
+📊 Barcode: 888930100 
+📏 Sizes: 1 
+🖼️ Imgs: 1
+📝 Desc: OK
+*/
+(async function () {
+  let allProducts = [];
+  let uniqueProductCount = 0;
+  let pageCount = 1;
+  let seenTitles = {};
+
+  console.clear();
+  console.log(
+    "%c 🚀 Nahid We START Finding Data Stay with us...",
+    "background: #111; color: #00ff00; padding: 10px; font-weight: bold;",
+  );
+
+  async function getProductDetails(url, productName, currentItem, totalItems) {
+    try {
+      let urlParts = url.split("/");
+      let handle =
+        urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2];
+      let productId = handle.split("-")[0];
+
+      let finalTitle = productName;
+      if (seenTitles[productName]) {
+        let count = seenTitles[productName];
+        finalTitle = `${productName} (${count})`;
+        seenTitles[productName]++;
+      } else {
+        seenTitles[productName] = 1;
+      }
+
+      let response = await fetch(url);
+      let buffer = await response.arrayBuffer();
+      let text = new TextDecoder("utf-8").decode(buffer);
+      let parser = new DOMParser();
+      let doc = parser.parseFromString(text, "text/html");
+
+      let sku = "N/A";
+      let h4s = doc.querySelectorAll("h4");
+      for (let h4 of h4s) {
+        if (h4.innerText.includes("REF:")) {
+          sku = h4.innerText.replace("REF:", "").replace(/"/g, "").trim();
+          break;
+        }
+      }
+
+      let imgs = [
+        ...new Set(
+          Array.from(
+            doc.querySelectorAll("#itemimatges img, .jcarousel li img"),
+          ).map((img) => img.src.replace("/mobile", "/")),
+        ),
+      ];
+
+      let sizes = Array.from(doc.querySelectorAll("#boxsiz0 option"))
+        .map((opt) => opt.innerText.trim())
+        .filter(
+          (s) =>
+            s && !s.toLowerCase().includes("selecciona") && !s.includes("--"),
+        )
+        .map((s) => {
+          if (s.toUpperCase().includes("TALLA ÚNICA")) return "TALLA ÚNICA"; // Full nibe
+          return s.split(" ")[0].split("-")[0].trim(); // Baki gula short nibe
+        });
+
+      let descText = doc.querySelector("h2")?.innerText.trim() || "";
+      let features = Array.from(doc.querySelectorAll("#itemtxt ul li"))
+        .map((li) => `<li>${li.innerText.trim()}</li>`)
+        .join("");
+      let bodyHTML = `<div><p>${descText}</p><ul>${features}</ul></div>`;
+      let barcode = `888${productId}00`;
+
+      // --- Console Highlight and Report ---
+      console.log(
+        `%c 📄 PAGE: ${pageCount} | 📦 PRODUCT: ${currentItem}/${totalItems} `,
+        "background: #00d659; color: #fff; padding: 2px 5px;",
+      );
+      console.log(
+        `%c TITLE: ${finalTitle.toUpperCase()} `,
+        "background: #1e88e5; color: white; font-weight: bold; padding: 5px; display: block; width: 100%;",
+      );
+      console.log(
+        `%c🔗 Handle: %c${handle} %c| %c🆔 SKU: %c${sku} %c| %c📊 Barcode: %c${barcode} %c| %c📏 Sizes: %c${sizes.length || 1} %c| %c🖼️ Imgs: %c${imgs.length} %c| %c📝 Desc: %cOK`,
+        "color: #27ae60; font-weight: bold;",
+        "color: #2ecc71;",
+        "color: #888;",
+        "color: #9b59b6; font-weight: bold;",
+        "color: #af7ac5;",
+        "color: #888;",
+        "color: #e67e22; font-weight: bold;",
+        "color: #f39c12;",
+        "color: #888;",
+        "color: #00bcd4; font-weight: bold;",
+        "color: #00bcd4;",
+        "color: #888;",
+        "color: #f06292; font-weight: bold;",
+        "color: #f06292;",
+        "color: #888;",
+        "color: #fff; font-weight: bold;",
+        "color: #fff;",
+      );
+      console.log("%c " + "-".repeat(100), "color: #444;");
+
+      return {
+        images: imgs,
+        sizes,
+        bodyHTML,
+        sku,
+        handle,
+        productId,
+        barcode,
+        finalTitle,
+      };
+    } catch (err) {
+      return null;
+    }
+  }
+
+  async function start() {
+    while (true) {
+      let items = document.querySelectorAll(".itemIN");
+      if (items.length === 0) break;
+
+      for (let i = 0; i < items.length; i++) {
+        let item = items[i];
+        let linkEl = item.querySelector("h3 a");
+        if (!linkEl) continue;
+
+        let rawTitle = linkEl.innerText.trim().split("\n").pop().trim();
+        let price =
+          item
+            .querySelector("h5")
+            ?.childNodes[0].textContent.trim()
+            .replace("€", "")
+            .replace(",", ".")
+            .trim() || "0";
+
+        let d = await getProductDetails(
+          linkEl.href,
+          rawTitle,
+          i + 1,
+          items.length,
+        );
+
+        if (d) {
+          uniqueProductCount++;
+          let hasSizes = d.sizes.length > 0;
+          let maxRows = Math.max(d.sizes.length, d.images.length, 1);
+
+          for (let j = 0; j < maxRows; j++) {
+            let isFirst = j === 0;
+            let currentSize = d.sizes[j] || "";
+            let currentImg = d.images[j] || "";
+
+            // Shopify standard logic: Size na thakle jodi extra image row hoy, tobe baki info faka hobe
+            let isVariantRow = hasSizes ? currentSize !== "" : isFirst;
+
+            allProducts.push({
+              Handle: d.handle,
+              Title: isFirst ? d.finalTitle : "",
+              "Body (HTML)": isFirst ? d.bodyHTML : "",
+              Vendor: isFirst ? "Kangroute" : "",
+              Type: isFirst ? "Motorcycle Gear" : "",
+              Tags: isFirst ? "Goyamoto, Motorcycle" : "",
+              Published: "TRUE",
+              "Option1 Name": isFirst ? (hasSizes ? "Size" : "Title") : "",
+              "Option1 Value": isVariantRow
+                ? hasSizes
+                  ? currentSize
+                  : "TALLA ÚNICA"
+                : "",
+              "Variant SKU": isVariantRow ? d.sku : "",
+              "Variant Barcode": isVariantRow ? d.barcode : "",
+              "Variant Inventory Tracker": isVariantRow ? "shopify" : "",
+              "Variant Inventory Qty": isVariantRow ? "100" : "",
+              "Variant Price": isVariantRow ? price : "",
+              "Variant Requires Shipping": isVariantRow ? "TRUE" : "",
+              "Variant Taxable": isVariantRow ? "TRUE" : "",
+              "Image Src": currentImg,
+              "Image Position": currentImg ? j + 1 : "",
+              "Image Alt Text": isFirst ? d.finalTitle : "",
+              "Variant Image": isVariantRow && currentImg ? currentImg : "",
+              Status: isFirst ? "active" : "",
+            });
+          }
+          allProducts.push(
+            Object.fromEntries(Object.keys(allProducts[0]).map((k) => [k, ""])),
+          );
+        }
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+
+      // --- পেজিনেশন লজিক ---
+      let nextBtn = document
+        .querySelector('img[src*="pagiDER.gif"]')
+        ?.closest("a");
+
+      if (nextBtn) {
+        console.log(
+          `%c ⏩ পেজ ${pageCount} শেষ। পরবর্তী পেজে যাচ্ছি...Please wait... `,
+          "background: #8e44ad; color: #fff; padding: 5px; font-weight: bold;",
+        );
+        nextBtn.click();
+        pageCount++;
+        // পেজ পুরোপুরি রিফ্রেশ হওয়ার জন্য ওয়েট
+        await new Promise((r) => setTimeout(r, 8000));
+      } else {
+        console.log(
+          "%c 🏁 আর কোনো পেজ পাওয়া যায়নি। ",
+          "background: #c0392b; color: #fff; padding: 5px;",
+        );
+        break;
+      }
+    }
+    downloadCSV();
+  }
+
+  function downloadCSV() {
+    const headers = Object.keys(allProducts[0]).join(",");
+    const rows = allProducts
+      .map((p) =>
+        Object.values(p)
+          .map((v) => `"${(v || "").toString().replace(/"/g, '""')}"`)
+          .join(","),
+      )
+      .join("\n");
+    const blob = new Blob(["\uFEFF" + headers + "\n" + rows], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `shopify_final_ready.csv`;
+    link.click();
+    console.log(
+      `%c ✅ মিশন সফল! মোট প্রোডাক্ট: ${uniqueProductCount} `,
+      "background: #27ae60; color: white; padding: 10px; font-size: 20px; font-weight: bold;",
     );
   }
 
